@@ -1,4 +1,4 @@
-package ai.dragonfly.distributed.monotomni
+package ai.dragonfly.monotomni
 
 import scala.concurrent.ExecutionContextExecutor
 

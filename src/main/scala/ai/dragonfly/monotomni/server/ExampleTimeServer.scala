@@ -1,4 +1,4 @@
-package ai.dragonfly.distributed.monotomni.server
+package ai.dragonfly.monotomni.server
 
 import akka.http.scaladsl.Http
 

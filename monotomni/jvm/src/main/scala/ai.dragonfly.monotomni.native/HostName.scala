@@ -1,4 +1,4 @@
-package ai.dragonfly.distributed.monotomni.native
+package ai.dragonfly.monotomni.native
 
 import java.net.InetAddress
 
