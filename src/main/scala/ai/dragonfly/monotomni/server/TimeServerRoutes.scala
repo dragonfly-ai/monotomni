@@ -1,7 +1,8 @@
 package ai.dragonfly.monotomni.server
 
-import ai.dragonfly.monotomni.{TimeTrial, TimeTrialJSONP}
+import java.io.File
 
+import ai.dragonfly.monotomni.{TimeTrial, TimeTrialJSONP}
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.model.{ContentType, ContentTypes, HttpCharsets, HttpEntity, MediaType}
 import akka.http.scaladsl.server.Directives._
@@ -13,7 +14,10 @@ object TimeServerRoutes {
   lazy val routes: Route = {
     get {
       val now:Long = System.currentTimeMillis()
-      respondWithHeaders(RawHeader("Cache-Control", "no-store")) {
+      respondWithHeaders(
+        RawHeader("Cache-Control", "no-store"),
+        RawHeader("Keep-Alive", "timeout=90")
+      ) {
         pathPrefix("time" / "JSONP" / LongNumber ) {
           (pendingTrialId: Long) =>
             val timeTrialJSONP = TimeTrialJSONP(pendingTrialId,TimeTrial(now))
@@ -36,6 +40,8 @@ object TimeServerRoutes {
               case "JSON" => complete(timeTrial.JSON)
               case _ => complete(timeTrial.XML) // Assume XML for any other string?
             }
+        } ~ pathPrefix("demo" ) {
+          getFromDirectory("./public_html/")
         }
       }
     }

@@ -1,7 +1,7 @@
 package ai.dragonfly.distributed
 
-import ai.dragonfly.monotomni.{MOI, Mono, Omni}
+import ai.dragonfly.monotomni.MOI
 
 trait Distributable {
-  val moi:MOI = Mono+Omni()
+  val moi:MOI
 }

@@ -8,7 +8,7 @@ import ai.dragonfly.monotomni._
 import TimeTrial.{TimeTrialFormat => TTF}
 import TTF.TimeTrialFormat
 import ai.dragonfly.monotomni
-import ai.dragonfly.monotomni.connection.TimeServerConnection.TimeServerConnection
+import ai.dragonfly.monotomni.connection.http.TimeServerConnectionHTTP
 
 import scala.collection.mutable
 import scala.concurrent.{Future, Promise}
@@ -43,7 +43,7 @@ object JSONP {
 
 }
 
-case class JSONP (uri:URI, override val defaultFormat:TimeTrialFormat = TTF.STRING, override val defaultTimeout:Int = 5000) extends TimeServerConnection {
+case class JSONP (override val uri:URI, override val defaultFormat:TimeTrialFormat = TTF.STRING, override val defaultTimeout:Int = 5000) extends TimeServerConnectionHTTP {
 
   /** TimeTrialFormat.BINARY not supported!
    *
@@ -58,10 +58,12 @@ case class JSONP (uri:URI, override val defaultFormat:TimeTrialFormat = TTF.STRI
       val scriptTag = document.createElement("script")
       scriptTag.setAttribute("type", "text/javascript")
       val promisedTimeTrial:Promise[TimeTrial] = Promise[TimeTrial]()
-      val pendingTimeTrial:PendingTimeTrial = PendingTimeTrial(promisedTimeTrial)
+      val pendingTimeTrial:PendingTimeTrial = PendingTimeTrial(promisedTimeTrial, timeoutMilliseconds)
+      JSONP(pendingTimeTrial)
       val urlTxt = s"$uri/JSONP/${pendingTimeTrial.moi}"
       scriptTag.setAttribute("src", urlTxt)
       document.getElementsByTagName("head")(0).appendChild(scriptTag)
+
 
       // handle timeout:
       new Timer(s"TimeTrial# ${pendingTimeTrial.moi} timeout monitor.").schedule(

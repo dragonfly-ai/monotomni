@@ -8,7 +8,7 @@ import ai.dragonfly.monotomni.{MOI, Mono, Omni, PendingTimeTrial, TimeTrial}
 import TimeTrial.{TimeTrialFormat => TTF}
 import TTF.TimeTrialFormat
 import ai.dragonfly.monotomni.TimeTrial.inputStream2String
-import ai.dragonfly.monotomni.connection.TimeServerConnection.TimeServerConnection
+import ai.dragonfly.monotomni.connection.http.TimeServerConnectionHTTP
 
 import scala.concurrent.{Future, Promise}
 import scala.scalajs.js
@@ -17,7 +17,7 @@ import js.DynamicImplicits._
 import scala.scalajs.js.typedarray.Uint8Array
 import scala.util.{Failure, Success}
 
-case class NodeJS(uri:URI, override val defaultFormat:TimeTrialFormat = TTF.BINARY, override val defaultTimeout:Int = 3000) extends TimeServerConnection {
+case class NodeJS(override val uri:URI, override val defaultFormat:TimeTrialFormat = TTF.BINARY, override val defaultTimeout:Int = 3000) extends TimeServerConnectionHTTP {
 
   override def supportedFormats:Seq[TimeTrialFormat] = Seq(TTF.BINARY, TTF.STRING, TTF.JSON, TTF.XML)
 
@@ -72,6 +72,6 @@ case class NodeJS(uri:URI, override val defaultFormat:TimeTrialFormat = TTF.BINA
       })
     })
 
-    PendingTimeTrial(promisedTimeTrial)
+    PendingTimeTrial(promisedTimeTrial, timeoutMilliseconds)
   }
 }

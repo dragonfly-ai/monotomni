@@ -3,6 +3,8 @@ ThisBuild / publishTo := Some( Resolver.file("file",  new File( "/var/www/maven"
 ThisBuild / scalacOptions ++= Seq("-feature", "-deprecation")
 ThisBuild / organization := "ai.dragonfly.code"
 ThisBuild / version := "0.01"
+ThisBuild / resolvers += "dragonfly.ai" at "https://code.dragonfly.ai/"
+ThisBuild / fork in run := true
 
 lazy val akkaHttpVersion = "10.2.3"
 lazy val akkaVersion    = "2.6.12"
@@ -13,7 +15,7 @@ lazy val root = project.in(file(".")).aggregate(
   monotomni.jvm
 ).dependsOn(monotomni.projects(JVMPlatform)).settings(
   name := "ExampleTimeServer",
-  mainClass in (Compile, run) := Some("ai.dragonfly.monotomni.ExampleTimeServer"),
+  mainClass in (Compile, run) := Some("ai.dragonfly.monotomni.server.ExampleTimeServer"),
   libraryDependencies ++= Seq(
     "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
     "com.typesafe.akka" %% "akka-stream" % akkaVersion, // or whatever the latest version is
@@ -22,8 +24,11 @@ lazy val root = project.in(file(".")).aggregate(
 
 lazy val monotomni = crossProject(JSPlatform, JVMPlatform).settings(
   name := "monotomni",
-  libraryDependencies += "org.scala-lang.modules" %%% "scala-xml" % "1.3.0",
-  mainClass in (Compile, run) := Some("ai.dragonfly.monotomni.TestMonotomni")
+  libraryDependencies ++= Seq(
+    "org.scala-lang.modules" %%% "scala-xml" % "1.3.0",
+    "ai.dragonfly.code" %%% "vector" % "0.302"
+  ),
+  mainClass in (Compile, run) := Some("ai.dragonfly.monotomni.Demo")
 ).jvmSettings(
   libraryDependencies += "org.scala-js" %% "scalajs-stubs" % "1.0.0"
 ).jsSettings(

@@ -8,11 +8,13 @@ import ai.dragonfly.monotomni.TimeTrial.{TimeTrialFormat => TTF}
 import TTF.TimeTrialFormat
 import ai.dragonfly.monotomni.TimeTrial.inputStream2String
 import ai.dragonfly.monotomni._
-import ai.dragonfly.monotomni.connection.TimeServerConnection.TimeServerConnection
+import ai.dragonfly.monotomni.connection.http.TimeServerConnectionHTTP
 
 import scala.concurrent.{Future, Promise}
 
-case class URL(uri:URI, override val defaultFormat:TimeTrialFormat = TTF.BINARY, override val defaultTimeout:Int = 3000) extends TimeServerConnection {
+case class URL(override val uri:URI, override val defaultFormat:TimeTrialFormat = TTF.BINARY, override val defaultTimeout:Int = 3000) extends TimeServerConnectionHTTP {
+
+  override val path: String = uri.toString
 
   override def supportedFormats:Seq[TimeTrialFormat] = Seq(TTF.BINARY, TTF.STRING, TTF.JSON, TTF.XML)
 
@@ -33,7 +35,7 @@ case class URL(uri:URI, override val defaultFormat:TimeTrialFormat = TTF.BINARY,
 
     promisedTimeTrial.completeWith(futureTimeTrial)
 
-    val pendingTimeTrial:PendingTimeTrial = PendingTimeTrial(promisedTimeTrial)
+    val pendingTimeTrial:PendingTimeTrial = PendingTimeTrial(promisedTimeTrial, timeoutMilliseconds)
     // handle timeout:
     new Timer(s"TimeTrial# ${pendingTimeTrial.moi} timeout monitor.").schedule(
       new TimerTask() {
@@ -45,4 +47,5 @@ case class URL(uri:URI, override val defaultFormat:TimeTrialFormat = TTF.BINARY,
     )
     pendingTimeTrial
   }
+
 }

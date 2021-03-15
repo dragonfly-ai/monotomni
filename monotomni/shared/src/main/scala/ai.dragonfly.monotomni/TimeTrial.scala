@@ -109,6 +109,15 @@ object TimeTrial {
   def XML(rawXML:String):TimeTrial = parse(scXML, rawXML)
 
   def test():Unit = {
+    println("Examples of Time Trial Formats:")
+    println(s"\thttp://whatever.time.server.com/time/BINARY -> ${TimeTrial().BINARY.mkString("Array(", ", ", ")")} // just ${TimeTrial.BYTES} bytes.")
+    println(s"\thttp://whatever.time.server.com/time/STRING -> ${TimeTrial().STRING}")
+    println(s"\thttp://whatever.time.server.com/time/JSON -> ${TimeTrial().JSON}")
+    println(s"\thttp://whatever.time.server.com/time/XML -> ${TimeTrial().XML}")
+
+    println("TimeTrialJSONP requests respond with this javascript:")
+    println(s"\thttp://whatever.time.server.com/time/JSONP -> ${TimeTrialJSONP(Mono+Omni(), TimeTrial()).JSONP}")
+
     import Test._
     Passes( () => TimeTrial.BINARY(TimeTrial().BINARY) )
     Fails( () => TimeTrial.BINARY(Array[Byte](0xff)) )
@@ -139,7 +148,7 @@ case class TimeTrial(serverTimeStamp:Long = System.currentTimeMillis()) {
   def XML:String = TimeTrial.scXML.s(serverTimeStamp)
 }
 
-case class PendingTimeTrial(timeTrialPromise:Promise[TimeTrial], start:Long=System.currentTimeMillis()) extends Distributable
+case class PendingTimeTrial(timeTrialPromise:Promise[TimeTrial], timeoutMilliseconds: Long, start:Long=System.currentTimeMillis(), moi:MOI = Mono+Omni()) extends Distributable
 
 object TimeTrialJSONP {
   def test():Unit = {
@@ -148,7 +157,7 @@ object TimeTrialJSONP {
     Fails(() => TimeTrialJSONP.JSONP("Blah Blah Blah. ERRROR!"))
   }
 
-  private val scJSONP = StringContext("function SYNCH_SERVERTIME(){ if ( typeof LOG_JSONP_TIME_TRIAL === 'undefined' ) { setTimeout(SYNCH_SERVERTIME, 500); } else { LOG_JSONP_TIME_TRIAL(',", "',''", "'); } } setTimeout(SYNCH_SERVERTIME, 1);")
+  private val scJSONP = StringContext("function SYNCH_SERVERTIME(){ if ( typeof LOG_JSONP_TIME_TRIAL === 'undefined' ) { setTimeout(SYNCH_SERVERTIME, 500); } else { LOG_JSONP_TIME_TRIAL('", "','", "'); } } setTimeout(SYNCH_SERVERTIME, 1);")
   /**
    * Parses TimeTrial object from JSONP Response Body.
    * Browser environments don't need this method but JVM or Node.js clients can use it to support JSONP calls made from repurposed browser applications, for testing, or for validating server responses.

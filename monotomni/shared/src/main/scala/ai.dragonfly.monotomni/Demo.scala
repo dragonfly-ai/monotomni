@@ -9,26 +9,28 @@ import scala.util.{Failure, Success}
   * Created by clifton on 11/24/14.
   */
 
-object TestMonotomni extends App {
+object Demo extends App {
 
     println("Testing local Mono+Omni MOI generation:")
-    for (i <- 0 until 10) println(s"$i => ${Mono+Omni()}")
+    for (i <- 0 until 10) println(s"$i => ${Mono + Omni()}")
 
     println("Testing Mono+Omni TimeTrial parsers:")
     TimeTrial.test()
     TimeTrialJSONP.test()
 
     println("Testing TimeServer and TimeServerClient TimeTrials:")
-    val uri:java.net.URI = new java.net.URI("http://localhost:8080/time")
+    val uri: java.net.URI = new java.net.URI("http://localhost:8080/time")
     println(s"testing on URL: $uri")
 
-    implicit val remote:Remote = new Remote(native.connection.DefaultConnection(uri))
+    implicit val remote: Remote = new Remote(native.connection.DefaultConnection(uri))
     println(remote)
 
-    (Remo+Ami()).onComplete {
-        case Success(ami: AMI) =>
-            for (i <- 0 until 10) println(s"$i => $ami")
-        case Failure(_) => println(s"Could not estimate Δt for TimeServer: $uri")
+
+    for (i <- 0 until 10) {
+        (Remo+Ami()).onComplete {
+            case Success(ami: AMI) => println(s"$i => $ami")
+            case Failure(_) => println(s"Could not estimate Δt for TimeServer: $uri")
+        }
     }
 }
 

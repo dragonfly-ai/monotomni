@@ -2,7 +2,7 @@ package ai.dragonfly.monotomni.native.connection
 
 import java.net.URI
 
-import ai.dragonfly.monotomni.connection.TimeServerConnection.TimeServerConnection
+import ai.dragonfly.monotomni.connection.TimeServerConnection
 import org.scalajs.dom.window
 
 object DefaultConnection {

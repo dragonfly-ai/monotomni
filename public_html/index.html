@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mono+Omni Demo</title>
+
+</head>
+<body>
+<h1>Mono+Omni Browser Tests</h1><br />
+<a href="http://localhost:8080/demo/index.html">Test Mono+Omni with AJAX</a><br />
+<a href="http://127.0.0.1:8080/demo/index.html">Test Mono+Omni over JSONP</a><br />
+Console Output:<br />
+<pre id="output" style="background-color: #000000; color: #eeeeee; width: 80%; height: 50%; max-height: 600px; overflow-y: scroll; overflow: scroll;"></pre>
+<script type="application/javascript">
+var print = console.log
+console.log = function(s) {
+  var output = document.getElementById("output");
+  output.innerHTML = output.innerHTML + "<br />" + s;
+  print(s);
+}
+</script>
+<script type="application/javascript" src="./js/monotomni-opt.js"></script>
+
+</body>
+</html>
