@@ -1,13 +1,15 @@
 package ai.dragonfly.monotomni.native.connection.http
 
-import java.io.ByteArrayInputStream
+import java.io.{ByteArrayInputStream, InputStream}
 import java.net.URI
 import java.nio.ByteBuffer
+import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeoutException
 
 import ai.dragonfly.monotomni._
 import TimeTrial.{TimeTrialFormat => TTF}
-import TTF.TimeTrialFormat
+import TTF.{BINARY, STRING, TimeTrialFormat}
+import ai.dragonfly.monotomni.connection.TimeServerConnectionFactory
 import ai.dragonfly.monotomni.connection.http.TimeServerConnectionHTTP
 import org.scalajs.dom
 import org.scalajs.dom.{Event, XMLHttpRequest, ext}
@@ -25,7 +27,12 @@ import scala.scalajs.js.typedarray.{ArrayBuffer, TypedArrayBuffer}
  * @return
  */
 
-case class AJAX(override val uri:URI, override val defaultFormat:TimeTrialFormat = TTF.BINARY, override val defaultTimeout:Int = 3000) extends TimeServerConnectionHTTP {
+object AJAX extends TimeServerConnectionFactory {
+  override val defaultTimeout: Int = 3000
+  override val defaultFormat: TimeTrialFormat = TTF.BINARY
+}
+
+case class AJAX(override val uri:URI, override val defaultFormat:TimeTrialFormat, override val defaultTimeout:Int) extends TimeServerConnectionHTTP {
 
   new XMLHttpRequest()
 
@@ -37,19 +44,24 @@ case class AJAX(override val uri:URI, override val defaultFormat:TimeTrialFormat
     val promisedTimeTrial:Promise[TimeTrial] = Promise[TimeTrial]()
 
     val xhr = new XMLHttpRequest()
-    xhr.responseType = "arraybuffer"
+    if (format == BINARY) xhr.responseType = "arraybuffer"
     xhr.timeout = timeoutMilliseconds
 
     xhr.onload = (e:Event) => {
       // When all goes to plan:
       if (xhr.status == 200) {
-        val arrayBuffer:ArrayBuffer = xhr.response.asInstanceOf[ArrayBuffer]
-        val wrapped:ByteBuffer = TypedArrayBuffer.wrap(arrayBuffer)
-        val bytes:Array[Byte] = new Array[Byte](TimeTrial.BYTES)
-        wrapped.get(bytes, 0, TimeTrial.BYTES)
-        val inputStream = new ByteArrayInputStream(bytes)
-        val tt:TimeTrial = TimeTrial.fromInputStream( format, inputStream )
-        promisedTimeTrial.success( tt ) //TimeTrial.fromInputStream( format, inputStream ) )
+        val inputStream:InputStream = format match {
+          case BINARY =>
+            val arrayBuffer:ArrayBuffer = xhr.response.asInstanceOf[ArrayBuffer]
+            val wrapped:ByteBuffer = TypedArrayBuffer.wrap(arrayBuffer)
+            val bytes:Array[Byte] = new Array[Byte](TimeTrial.BYTES)
+            wrapped.get(bytes, 0, TimeTrial.BYTES)
+            new ByteArrayInputStream(bytes)
+          case _ =>
+            new ByteArrayInputStream(xhr.response.asInstanceOf[String].getBytes(StandardCharsets.UTF_8))
+        }
+
+        promisedTimeTrial.success( TimeTrial.fromInputStream( format, inputStream ) )
       } else {
         promisedTimeTrial.failure(ext.AjaxException(xhr))
       }

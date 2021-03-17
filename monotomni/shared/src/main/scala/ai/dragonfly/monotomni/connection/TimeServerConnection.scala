@@ -14,5 +14,5 @@ trait TimeServerConnection {
 
   def timeTrial(format: TimeTrialFormat, timeoutMilliseconds: Int): PendingTimeTrial
 
-  override def toString: String = s"${this.getClass.getName} connection to TimeServer@[$path]"
+  override def toString: String = s"${this.getClass.getName}($path, $defaultFormat, $defaultTimeout)"
 }

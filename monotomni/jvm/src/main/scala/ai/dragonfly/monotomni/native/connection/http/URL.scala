@@ -8,11 +8,17 @@ import ai.dragonfly.monotomni.TimeTrial.{TimeTrialFormat => TTF}
 import TTF.TimeTrialFormat
 import ai.dragonfly.monotomni.TimeTrial.inputStream2String
 import ai.dragonfly.monotomni._
+import ai.dragonfly.monotomni.connection.{TimeServerConnection, TimeServerConnectionFactory}
 import ai.dragonfly.monotomni.connection.http.TimeServerConnectionHTTP
 
 import scala.concurrent.{Future, Promise}
 
-case class URL(override val uri:URI, override val defaultFormat:TimeTrialFormat = TTF.BINARY, override val defaultTimeout:Int = 3000) extends TimeServerConnectionHTTP {
+object URL extends TimeServerConnectionFactory {
+  override val defaultTimeout: Int = 3000
+  override val defaultFormat: TimeTrialFormat = TTF.BINARY
+}
+
+case class URL(override val uri:URI, override val defaultFormat:TimeTrialFormat, override val defaultTimeout:Int) extends TimeServerConnectionHTTP {
 
   override val path: String = uri.toString
 

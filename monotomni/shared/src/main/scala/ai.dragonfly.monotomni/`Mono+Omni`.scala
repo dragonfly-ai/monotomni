@@ -4,6 +4,7 @@ import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
 import java.util.concurrent.atomic.AtomicLong
 
 import ai.dragonfly.math.stats.stream.{Gaussian, Poisson}
+import ai.dragonfly.monotomni.Remote.defaultMaxWeight
 import ai.dragonfly.monotomni.connection.TimeServerConnection
 
 import scala.scalajs.js
@@ -20,11 +21,15 @@ object `Mono+Omni` {
    * Helpful mnemonic: the digits of dawnOfTime count down from 16 to 11 then ends with a 0: 16 15 14 13 12 11 0 L
    * println(new java.util.Date(1615141312110L)) -> Sun Mar 07 11:21:52 MST 2021
    */
+
   final val dawnOfTime:Long = 1615141312110L // timestamp of the birth of this library
-  final val host: Byte = native.HostName.hostName.hashCode().toByte
+  final val host:Long = 0x0000000F & native.HostName.hostName.hashCode() // can't use Byte.  in JavaScript environments, it's an Int/Double
   private final val counter:AtomicLong = new AtomicLong(0L)  // overflows safely with bitmask.  No need to ever reset it.
-  private def count():Long = 0x0000000000000fffL & counter.getAndIncrement() // mask off all but least significant 24 bits.
-  @inline def apply(ts:Long = System.currentTimeMillis()):MOI = (((ts - dawnOfTime) >>> 8) << 32) | (count() << 8) | host
+  private def count():Long = synchronized { 0x0000fff0L & (counter.getAndIncrement() << 8) } // mask off all but least significant 24 bits.
+  @inline private def shiftTime(ts:Long):Long = (ts - dawnOfTime >>> 8) << 32
+  def apply(ts:Long = System.currentTimeMillis()):MOI = shiftTime(ts) | count() | host
+
+  override def toString: String = s"Mono+Omni( dawnOfTime = $dawnOfTime, host = $host, counter = ${counter.get()} )"
 }
 
 object Mono {
@@ -35,7 +40,7 @@ object Mono {
 }
 
 object `Remo+Ami` {
-  def apply(moi:MOI = Mono+Omni())(implicit r:Remote):Future[AMI] = r(moi)
+  def apply(moi:MOI = Mono+Omni())(implicit r:Remote):AMI = r(moi)
 }
 
 object Remo {
@@ -47,14 +52,24 @@ object Remo {
   @inline def +():Unit = ()
 }
 
+object Remote {
+  val defaultMaxWeight:Long = 60000L
+  def apply(timeServerConnection: TimeServerConnection, maxWait:Long = defaultMaxWeight):Future[Remote] = {
+    val r = new Remote(timeServerConnection, maxWait)
+    for {
+      f <- r.`promisedΔT1`.future
+    } yield r
+  }
+}
+
 /**
  * Remote manages TimeServer clock approximation.
  * @param timeServerConnection connection to a remote time server.
  * @param maxWait maximum wait time, in milliseconds, between time Trials.
  */
-class Remote(private val timeServerConnection: TimeServerConnection, maxWait:Long = 60000) {
+class Remote(private val timeServerConnection: TimeServerConnection, maxWait:Long=defaultMaxWeight) {
 
-  def apply(moi:MOI = Mono+Omni()):Future[AMI] = for { dT <- `E(Δt)`} yield moi + (dT << 32)
+  def apply(moi:MOI = Mono+Omni()):AMI = if (isReady) moi + (ΔT.get() << 32) else throw RemoteConnectionNotReady(this)
 
   /*
    * Lq = latency of client requests to the server.
@@ -74,6 +89,15 @@ class Remote(private val timeServerConnection: TimeServerConnection, maxWait:Lon
   private val failedTrials:AtomicLong = new AtomicLong(0L)
 
   private lazy val `promisedΔT1`:Promise[() => Long] = Promise[() => Long]()
+
+  def isReady:Boolean = `promisedΔT1`.isCompleted
+
+  def ready(callback: () => Unit):Unit = {
+    `promisedΔT1`.future onComplete {
+      case Success(_) => callback()
+      case Failure(t:Throwable) => throw t
+    }
+  }
 
   /**
    * @return E(Δt)
@@ -115,11 +139,11 @@ class Remote(private val timeServerConnection: TimeServerConnection, maxWait:Lon
 
         val waitTime:Long = if (l == 0) {
           setDeltaT(ts - S)
-          println(s"logTimeTrial($pendingTimeTrial, $timeTrial) =>\n\t[ lag = $l, error = 0, |error| = 0 ] // 0 Lag!  Perfect Trial!\n\tState: $this")
+          println(s"logTimeTrial($pendingTimeTrial, $timeTrial) =>\n\t[ lag = $l, error = 0, |error| = 0 ] // 0 Lag!  Perfect Trial!\n\t$this")
           maxWait
         } else if (successTrials.get() < 1) {
           setDeltaT(ts - S + (l * 0.5).toLong)
-          println(s"logTimeTrial($pendingTimeTrial, $timeTrial) =>\n\t[ lag = $l ] // First Trial.\n\tState: $this")
+          println(s"logTimeTrial($pendingTimeTrial, $timeTrial) =>\n\t[ lag = $l ] // First Trial.\n\t$this")
           0L
         } else {
           /* E(ts) = expected value of ts given current model of `|Lq|`
@@ -132,10 +156,10 @@ class Remote(private val timeServerConnection: TimeServerConnection, maxWait:Lon
 
           if (ts <= min_E_ts) { // ts is earlier than Lq = 0 predicts
             setDeltaT(ts - S)
-            println(s"logTimeTrial($pendingTimeTrial, $timeTrial) =>\n\t[ lag = $l, Emin(ts) = $min_E_ts ] // ts < E(ts) | Lq = 0\n\tState: $this")
+            println(s"logTimeTrial($pendingTimeTrial, $timeTrial) =>\n\t[ lag = $l, Emin(ts) = $min_E_ts ] // ts < E(ts) | Lq = 0\n\t$this")
           } else if (ts > max_E_ts) {  // ts is later than Lq = 1 predicts
             setDeltaT(ts - E)
-            println(s"logTimeTrial($pendingTimeTrial, $timeTrial) =>\n\t[ lag = $l, Emax(ts) = $max_E_ts ] // ts > E(ts) | Lq = 1\n\tState: $this")
+            println(s"logTimeTrial($pendingTimeTrial, $timeTrial) =>\n\t[ lag = $l, Emax(ts) = $max_E_ts ] // ts > E(ts) | Lq = 1\n\t$this")
           } else if (l < L.mean) {  // |Lq| considers trials with low lag and ignores trials with high lag.
 
             val normalizedPredictionError: Double = predictionError / l.toDouble
@@ -147,7 +171,7 @@ class Remote(private val timeServerConnection: TimeServerConnection, maxWait:Lon
             }
 
             `|Lq|`(lq)
-            println(s"logTimeTrial($pendingTimeTrial, $timeTrial) =>\n\t[ lag = $l, |lq| = $lq, E(ts) = $E_ts, E(ts) - ts = $predictionError, |E(ts) - ts| = $normalizedPredictionError ]\n\tState: $this")
+            println(s"logTimeTrial($pendingTimeTrial, $timeTrial) =>\n\t[ lag = $l, |lq| = $lq, E(ts) = $E_ts, E(ts) - ts = $predictionError, |E(ts) - ts| = $normalizedPredictionError ]\n\t$this")
           } else {
             println(s"Ignoring High Lag trial: $l")
           }
@@ -186,10 +210,12 @@ class Remote(private val timeServerConnection: TimeServerConnection, maxWait:Lon
   }
 
   override def toString:String = if (L.sampleSize > 0) {
-    s"TimeServer Time Estimates : {\n\tsuccessTrials = $successTrials\n\tfailedTrials = $failedTrials\n\tE(Δt) = ${`ΔT`}\n\t|Lq| = ${`|Lq|`}\n\tlagModel = $L\n}"
+    s"$timeServerConnection Time Estimates : {\n\tsuccessTrials = $successTrials\n\tfailedTrials = $failedTrials\n\tE(Δt) = ${`ΔT`}\n\t|Lq| = ${`|Lq|`}\n\tlagModel = $L\n}"
   } else s"Initializing TimeServerConnection: $timeServerConnection"
 
   scheduleNextTrial(0L)
 }
 
 case class FailedToSynchronizeWithTimeServerConnection(timeServerConnection: TimeServerConnection) extends Exception(s"Failed to Synchronize over TimeServerConnection: $timeServerConnection")
+
+case class RemoteConnectionNotReady(remote: Remote) extends Exception(s"Remote Connection Not Ready: $remote")

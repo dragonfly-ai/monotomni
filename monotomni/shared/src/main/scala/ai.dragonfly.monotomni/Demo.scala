@@ -2,6 +2,9 @@ package ai.dragonfly.monotomni
 
 import java.util.concurrent.atomic.AtomicInteger
 
+import ai.dragonfly.monotomni.TimeTrial.TimeTrialFormat
+import ai.dragonfly.monotomni.connection.TimeServerConnectionFactory
+
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
@@ -12,26 +15,42 @@ import scala.util.{Failure, Success}
 object Demo extends App {
 
     println("Testing local Mono+Omni MOI generation:")
-    for (i <- 0 until 10) println(s"$i => ${Mono + Omni()}")
+    for (i <- 0 until 10) {
+        val moi:MOI = Mono+Omni()
+        println(s"$i => $moi {${M0I(moi)}}")
+    }
 
     println("Testing Mono+Omni TimeTrial parsers:")
     TimeTrial.test()
     TimeTrialJSONP.test()
 
     println("Testing TimeServer and TimeServerClient TimeTrials:")
-    val uri: java.net.URI = new java.net.URI("http://localhost:8080/time")
-    println(s"testing on URL: $uri")
+    val uri1: java.net.URI = new java.net.URI("http://localhost:8080/time")
+    println(s"testing on URL: $uri1")
+    val timeServerConnectionFactory1:TimeServerConnectionFactory = native.connection.Default(uri1)
 
-    implicit val remote: Remote = new Remote(native.connection.DefaultConnection(uri))
-    println(remote)
-
-
-    for (i <- 0 until 10) {
-        (Remo+Ami()).onComplete {
-            case Success(ami: AMI) => println(s"$i => $ami")
-            case Failure(_) => println(s"Could not estimate Δt for TimeServer: $uri")
-        }
+    /* Default Connection */
+    Remote(timeServerConnectionFactory1(uri1)) onComplete {
+        case Success(r:Remote) =>
+            implicit val remote:Remote = r
+            println(s"Approximate Monotonically Increasing Omni-Present Identifiers from:\n\t$remote")
+            print(s"\t[${Remo+Ami()}")
+            for (i <- 1 until 50) print(s", ${Remo+Ami()}")
+            print("]")
+        case Failure(t:Throwable) => println(s"Couldn't connect to $uri1")
     }
+
+    val uri2:java.net.URI = new java.net.URI("http://127.0.0.1:8080/time")
+
+    /* alternatively */
+    val timeServerConnectionFactory2:TimeServerConnectionFactory = native.connection.Default(uri2)
+    implicit val r:Remote = new Remote(timeServerConnectionFactory2(uri2, TimeTrialFormat.JSON))
+    r.ready(() => {
+        println(s"Approximate Monotonically Increasing Omni-Present Identifiers from:\n\t$r")
+        print(s"\t[${Remo+Ami()}")
+        for (i <- 1 until 50) print(s", ${Remo+Ami()}")
+        print("]")
+    })
 }
 
 object Test {

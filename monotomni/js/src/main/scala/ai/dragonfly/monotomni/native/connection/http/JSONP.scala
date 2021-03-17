@@ -7,11 +7,11 @@ import java.util.concurrent.TimeoutException
 import ai.dragonfly.monotomni._
 import TimeTrial.{TimeTrialFormat => TTF}
 import TTF.TimeTrialFormat
-import ai.dragonfly.monotomni
+import ai.dragonfly.monotomni.connection.TimeServerConnectionFactory
 import ai.dragonfly.monotomni.connection.http.TimeServerConnectionHTTP
 
 import scala.collection.mutable
-import scala.concurrent.{Future, Promise}
+import scala.concurrent.Promise
 import scala.scalajs.js.annotation.JSExportTopLevel
 
 /**
@@ -19,7 +19,9 @@ import scala.scalajs.js.annotation.JSExportTopLevel
  * JSONP coordinates browser based time clients with TimeTrials executed over JSONP.
  */
 
-object JSONP {
+object JSONP extends TimeServerConnectionFactory {
+  override val defaultTimeout: Int = 5000
+  override val defaultFormat: TimeTrialFormat = TTF.JSONP
 
   @JSExportTopLevel("LOG_JSONP_TIME_TRIAL")
   def logTimeTrial(pendingTimeTrialId:String, serverTimeStamp: String): TimeTrial = logTimeTrial(
@@ -43,13 +45,13 @@ object JSONP {
 
 }
 
-case class JSONP (override val uri:URI, override val defaultFormat:TimeTrialFormat = TTF.STRING, override val defaultTimeout:Int = 5000) extends TimeServerConnectionHTTP {
+case class JSONP (override val uri:URI, override val defaultFormat:TimeTrialFormat, override val defaultTimeout:Int) extends TimeServerConnectionHTTP {
 
   /** TimeTrialFormat.BINARY not supported!
    *
    * @return a Seq of supported TimeTrialFormat flags.
    */
-  override def supportedFormats:Seq[TimeTrialFormat] = Seq(TTF.STRING, TTF.JSON, TTF.XML)
+  override def supportedFormats:Seq[TimeTrialFormat] = Seq(TTF.JSONP)
 
   override def timeTrial(format: TimeTrialFormat = defaultFormat, timeoutMilliseconds:Int = defaultTimeout): PendingTimeTrial = {
     try {

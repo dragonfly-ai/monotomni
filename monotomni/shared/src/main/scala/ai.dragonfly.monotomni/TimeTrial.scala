@@ -16,7 +16,7 @@ object TimeTrial {
   /** TimeTrialFormat enumeration as flags for content types supported by instances of TimeServerConnection. */
   object TimeTrialFormat extends Enumeration {
     type TimeTrialFormat = Value
-    val BINARY, STRING, JSON, XML = Value
+    val BINARY, STRING, JSON, XML, JSONP = Value
   }
 
   /* Binary TimeTrial Utilities */
@@ -95,7 +95,7 @@ object TimeTrial {
    * @return the TimeTrial object encoded in the JSON String
    */
   def JSON(rawJSON:String):TimeTrial = {
-    println(s"$rawJSON ${parse(scJSON, rawJSON)}")
+    //println(s"$rawJSON ${parse(scJSON, rawJSON)}")
     parse(scJSON, rawJSON)
   }
 

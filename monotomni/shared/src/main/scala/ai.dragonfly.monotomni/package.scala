@@ -24,10 +24,10 @@ package object monotomni {
   })"
 
   implicit class M0I(moi: MOI) {
-    def timestamp:Long = Mono+Omni.dawnOfTime + moi >>> 32
-    def hashMask:Int = Mono+Omni.host
-    def count:Int = ((moi << 56) >>> 56).toInt
-    override def toString: String = s"Moi(${moi >>> 32}, ${(moi << 32) >> 40}, ${(moi << 56) >>> 56})"
+    def timestamp:Long = Mono+Omni.dawnOfTime + (moi >>> 32)
+    def hashMask:Long = Mono+Omni.host
+    def count:Long = (0x0000fff0L & moi) >>> 8
+    override def toString: String = s"Moi($timestamp, $count, $hashMask)"
   }
 
   val Ami:`Remo+Ami`.type = `Remo+Ami`
