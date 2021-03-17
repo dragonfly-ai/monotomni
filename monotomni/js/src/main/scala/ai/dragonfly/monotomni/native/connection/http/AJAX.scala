@@ -8,7 +8,7 @@ import java.util.concurrent.TimeoutException
 
 import ai.dragonfly.monotomni._
 import TimeTrial.{TimeTrialFormat => TTF}
-import TTF.{BINARY, STRING, TimeTrialFormat}
+import TTF.{BINARY, TimeTrialFormat}
 import ai.dragonfly.monotomni.connection.TimeServerConnectionFactory
 import ai.dragonfly.monotomni.connection.http.TimeServerConnectionHTTP
 import org.scalajs.dom

@@ -5,7 +5,6 @@ import java.util.concurrent.atomic.AtomicInteger
 import ai.dragonfly.monotomni.TimeTrial.TimeTrialFormat
 import ai.dragonfly.monotomni.connection.TimeServerConnectionFactory
 
-import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
 /**

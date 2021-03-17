@@ -66,7 +66,6 @@ case class JSONP (override val uri:URI, override val defaultFormat:TimeTrialForm
       scriptTag.setAttribute("src", urlTxt)
       document.getElementsByTagName("head")(0).appendChild(scriptTag)
 
-
       // handle timeout:
       new Timer(s"TimeTrial# ${pendingTimeTrial.moi} timeout monitor.").schedule(
         new TimerTask() {

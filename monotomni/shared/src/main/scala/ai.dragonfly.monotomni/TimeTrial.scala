@@ -2,14 +2,11 @@ package ai.dragonfly.monotomni
 
 import java.io.{BufferedReader, InputStream, InputStreamReader}
 import java.nio.ByteBuffer
-import java.util.Scanner
-import java.util.concurrent.atomic.AtomicInteger
 
 import ai.dragonfly.distributed.Distributable
 
 import scala.language.implicitConversions
-import scala.concurrent.{Future, Promise}
-import scala.io.Source
+import scala.concurrent.Promise
 
 object TimeTrial {
 

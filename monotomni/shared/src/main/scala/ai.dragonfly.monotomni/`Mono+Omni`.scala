@@ -7,8 +7,6 @@ import ai.dragonfly.math.stats.stream.{Gaussian, Poisson}
 import ai.dragonfly.monotomni.Remote.defaultMaxWeight
 import ai.dragonfly.monotomni.connection.TimeServerConnection
 
-import scala.scalajs.js
-import scala.scalajs.js.annotation.JSExport
 import ai.dragonfly.monotomni.native
 
 import scala.concurrent.{Future, Promise}

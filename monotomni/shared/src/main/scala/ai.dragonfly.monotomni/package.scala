@@ -4,7 +4,7 @@ import scala.language.postfixOps
 import scala.language.implicitConversions
 import ai.dragonfly.monotomni.native
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 import scala.util.matching.Regex
 
 package object monotomni {

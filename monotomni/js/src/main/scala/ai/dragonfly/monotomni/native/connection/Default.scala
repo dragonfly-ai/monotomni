@@ -2,8 +2,7 @@ package ai.dragonfly.monotomni.native.connection
 
 import java.net.URI
 
-import ai.dragonfly.monotomni.TimeTrial.TimeTrialFormat.TimeTrialFormat
-import ai.dragonfly.monotomni.connection.{TimeServerConnection, TimeServerConnectionFactory}
+import ai.dragonfly.monotomni.connection.TimeServerConnectionFactory
 import org.scalajs.dom.window
 
 object Default {

@@ -6,9 +6,8 @@ import java.util.{Timer, TimerTask}
 
 import ai.dragonfly.monotomni.TimeTrial.{TimeTrialFormat => TTF}
 import TTF.TimeTrialFormat
-import ai.dragonfly.monotomni.TimeTrial.inputStream2String
 import ai.dragonfly.monotomni._
-import ai.dragonfly.monotomni.connection.{TimeServerConnection, TimeServerConnectionFactory}
+import ai.dragonfly.monotomni.connection.TimeServerConnectionFactory
 import ai.dragonfly.monotomni.connection.http.TimeServerConnectionHTTP
 
 import scala.concurrent.{Future, Promise}

@@ -3,7 +3,6 @@ package ai.dragonfly.monotomni.native.connection.http
 import java.io.ByteArrayInputStream
 import java.net.URI
 
-import ai.dragonfly.monotomni.native.executor
 import ai.dragonfly.monotomni.{PendingTimeTrial, TimeTrial}
 import TimeTrial.{TimeTrialFormat => TTF}
 import TTF.TimeTrialFormat
