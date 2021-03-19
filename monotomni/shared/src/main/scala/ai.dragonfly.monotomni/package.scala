@@ -12,7 +12,7 @@ package object monotomni {
   implicit val ec:ExecutionContext = native.executor
 
   val Omni:`Mono+Omni`.type = `Mono+Omni`
-  type MOI = Long  // Type Alias to communicate the difference between longs and Mono+Omni literals.
+  type MOI = Long // Type Alias to communicate the difference between longs and Mono+Omni literals.
 
   implicit def byteArray2String(bytes: Array[Byte]): String = s"Array[Byte](${
     if (bytes.length < 1) "()" else {

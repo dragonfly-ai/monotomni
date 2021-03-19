@@ -1,13 +1,12 @@
 package ai.dragonfly.monotomni.native.connection.http
 
-import java.io.ByteArrayInputStream
 import java.net.URI
 
-import ai.dragonfly.monotomni.{PendingTimeTrial, TimeTrial}
-import TimeTrial.{TimeTrialFormat => TTF}
-import TTF.TimeTrialFormat
 import ai.dragonfly.monotomni.connection.TimeServerConnectionFactory
 import ai.dragonfly.monotomni.connection.http.TimeServerConnectionHTTP
+import ai.dragonfly.monotomni.{PendingTimeTrial, TimeTrial}
+import TimeTrial.Formats
+import ai.dragonfly.monotomni.TimeTrial.Formats.Format
 
 import scala.concurrent.Promise
 import scala.scalajs.js
@@ -18,12 +17,13 @@ import scala.scalajs.js.typedarray.Uint8Array
 
 object NodeJS extends TimeServerConnectionFactory {
   override val defaultTimeout: Int = 3000
-  override val defaultFormat: TimeTrialFormat = TTF.BINARY
+  override val defaultFormat: Formats.Format = Formats.BINARY
+  override val supportedFormats: Seq[Format] = Seq(Formats.BINARY, Formats.STRING, Formats.JSON, Formats.XML)
 }
 
-case class NodeJS(override val uri:URI, override val defaultFormat:TimeTrialFormat, override val defaultTimeout:Int) extends TimeServerConnectionHTTP {
+case class NodeJS(override val uri:URI, override val defaultFormat:Formats.Format, override val defaultTimeout:Int) extends TimeServerConnectionHTTP {
 
-  override def supportedFormats:Seq[TimeTrialFormat] = Seq(TTF.BINARY, TTF.STRING, TTF.JSON, TTF.XML)
+  override def supportedFormats:Seq[Formats.Format] = NodeJS.supportedFormats
 
   val http: js.Dynamic = g.require("http")
   val https: js.Dynamic = g.require("https")
@@ -41,7 +41,7 @@ case class NodeJS(override val uri:URI, override val defaultFormat:TimeTrialForm
    * @param format The format of the server response message.  Configurable for custom time servers.
    * @return PendingTimeTrial
    */
-  override def timeTrial(format:TimeTrialFormat = defaultFormat, timeoutMilliseconds:Int = defaultTimeout): PendingTimeTrial = {
+  override def timeTrial(format:Formats.Format = defaultFormat, timeoutMilliseconds:Int = defaultTimeout): PendingTimeTrial = {
     val urlTxt = s"$uri/$format/"
 
     val promisedTimeTrial:Promise[TimeTrial] = Promise[TimeTrial]()
@@ -52,18 +52,15 @@ case class NodeJS(override val uri:URI, override val defaultFormat:TimeTrialForm
       case "https" => https
     }).get(urlTxt, new HttpRequestOptions(timeout = timeoutMilliseconds), (res:Response) => {
       res.setEncoding("binary")
-      var arr:Array[Byte] = null
 
-      res.on("data", (chunk: js.Any) => {
-        // all valid responses fit in only one chunk.
-        val ui8arr:Uint8Array = Buffer.from(chunk, "binary").asInstanceOf[Uint8Array]
-        arr = new Array[Byte](ui8arr.byteLength)
-        for (i <- 0 until ui8arr.byteLength) { arr(i) = ui8arr(i).toByte }
-      })
-
-      res.on("end", () => {
+      res.on("data", (chunk: js.Any) => { // all valid responses fit in only one chunk.
         try {
-          promisedTimeTrial.success( TimeTrial.fromInputStream( format, new ByteArrayInputStream(arr) ) )
+          promisedTimeTrial.success(
+            TimeTrial.fromUint8Array(
+              format,
+              Buffer.from(chunk, "binary").asInstanceOf[Uint8Array]
+            )
+          )
         } catch {
           case jse: scala.scalajs.js.JavaScriptException =>
             println(s"Error on $urlTxt")
@@ -74,6 +71,8 @@ case class NodeJS(override val uri:URI, override val defaultFormat:TimeTrialForm
             promisedTimeTrial.failure(t)
         }
       })
+
+      //res.on("end", () => {})
     })
 
     PendingTimeTrial(promisedTimeTrial, timeoutMilliseconds)

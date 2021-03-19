@@ -1,7 +1,5 @@
 package ai.dragonfly.monotomni.server
 
-import java.io.File
-
 import ai.dragonfly.monotomni.{TimeTrial, TimeTrialJSONP}
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.model.{ContentType, ContentTypes, HttpCharsets, HttpEntity, MediaType}

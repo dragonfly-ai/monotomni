@@ -2,10 +2,23 @@ package ai.dragonfly.monotomni.native.connection
 
 import java.net.URI
 
-import ai.dragonfly.monotomni.connection.TimeServerConnectionFactory
+import ai.dragonfly.monotomni
+import monotomni.TimeTrial.Formats.Format
+import monotomni.connection.{TimeServerConnection, TimeServerConnectionFactory}
 import org.scalajs.dom.window
+import scala.language.implicitConversions
+
 
 object Default {
+
+  def apply(uri:URI, format:Format = null, timeout:Int = -1):TimeServerConnection = {
+    val factory:TimeServerConnectionFactory = apply(uri)
+    factory(
+      uri,
+      if (format == null) factory.defaultFormat else format,
+      if (timeout < 1) factory.defaultTimeout else timeout
+    )
+  }
 
   def apply(uri:URI):TimeServerConnectionFactory = {
     val timeServerConnection:TimeServerConnectionFactory = try {

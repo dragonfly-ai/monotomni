@@ -1,21 +1,20 @@
 package ai.dragonfly.monotomni.native.connection.http
 
-import java.io.{ByteArrayInputStream, InputStream}
-import java.net.URI
-import java.nio.ByteBuffer
+import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeoutException
+import java.net.URI
 
 import ai.dragonfly.monotomni._
-import TimeTrial.{TimeTrialFormat => TTF}
-import TTF.{BINARY, TimeTrialFormat}
+import TimeTrial.Formats
 import ai.dragonfly.monotomni.connection.TimeServerConnectionFactory
 import ai.dragonfly.monotomni.connection.http.TimeServerConnectionHTTP
+
 import org.scalajs.dom
 import org.scalajs.dom.{Event, XMLHttpRequest, ext}
 
 import scala.concurrent.Promise
-import scala.scalajs.js.typedarray.{ArrayBuffer, TypedArrayBuffer}
+import scala.scalajs.js.typedarray.ArrayBuffer
 
 
 /**
@@ -29,39 +28,41 @@ import scala.scalajs.js.typedarray.{ArrayBuffer, TypedArrayBuffer}
 
 object AJAX extends TimeServerConnectionFactory {
   override val defaultTimeout: Int = 3000
-  override val defaultFormat: TimeTrialFormat = TTF.BINARY
+  override val defaultFormat: Formats.Format = Formats.BINARY
+  override val supportedFormats:Seq[Formats.Format] = Seq(Formats.BINARY, Formats.STRING, Formats.JSON, Formats.XML)
 }
 
-case class AJAX(override val uri:URI, override val defaultFormat:TimeTrialFormat, override val defaultTimeout:Int) extends TimeServerConnectionHTTP {
+case class AJAX(override val uri:URI, override val defaultFormat:Formats.Format, override val defaultTimeout:Int) extends TimeServerConnectionHTTP {
 
-  new XMLHttpRequest()
+  new XMLHttpRequest()  // throw exception if run outside of browser environment.
 
-  override def supportedFormats:Seq[TimeTrialFormat] = Seq(TTF.BINARY, TTF.STRING, TTF.JSON, TTF.XML)
+  override def supportedFormats:Seq[Formats.Format] = AJAX.supportedFormats
 
-  override def timeTrial(format: TimeTrialFormat = defaultFormat, timeoutMilliseconds:Int = defaultTimeout): PendingTimeTrial = {
+  override def timeTrial(format: Formats.Format = defaultFormat, timeoutMilliseconds:Int = defaultTimeout): PendingTimeTrial = {
     val urlTxt = s"$uri/$format"
 
     val promisedTimeTrial:Promise[TimeTrial] = Promise[TimeTrial]()
 
     val xhr = new XMLHttpRequest()
-    if (format == BINARY) xhr.responseType = "arraybuffer"
+    if (format == Formats.BINARY) xhr.responseType = "arraybuffer"
     xhr.timeout = timeoutMilliseconds
 
     xhr.onload = (e:Event) => {
       // When all goes to plan:
       if (xhr.status == 200) {
-        val inputStream:InputStream = format match {
-          case BINARY =>
-            val arrayBuffer:ArrayBuffer = xhr.response.asInstanceOf[ArrayBuffer]
-            val wrapped:ByteBuffer = TypedArrayBuffer.wrap(arrayBuffer)
-            val bytes:Array[Byte] = new Array[Byte](TimeTrial.BYTES)
-            wrapped.get(bytes, 0, TimeTrial.BYTES)
-            new ByteArrayInputStream(bytes)
-          case _ =>
-            new ByteArrayInputStream(xhr.response.asInstanceOf[String].getBytes(StandardCharsets.UTF_8))
-        }
-
-        promisedTimeTrial.success( TimeTrial.fromInputStream( format, inputStream ) )
+        promisedTimeTrial.success(
+          format match {
+            case Formats.BINARY =>
+              TimeTrial.fromArrayBuffer(xhr.response.asInstanceOf[ArrayBuffer])
+            case _ =>
+              TimeTrial.fromInputStream(
+                format,
+                new ByteArrayInputStream(
+                  xhr.response.asInstanceOf[String].getBytes(StandardCharsets.UTF_8)
+                )
+              )
+          }
+        )
       } else {
         promisedTimeTrial.failure(ext.AjaxException(xhr))
       }

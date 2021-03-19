@@ -4,8 +4,7 @@ import java.net.URI
 import java.util.concurrent.TimeoutException
 import java.util.{Timer, TimerTask}
 
-import ai.dragonfly.monotomni.TimeTrial.{TimeTrialFormat => TTF}
-import TTF.TimeTrialFormat
+import ai.dragonfly.monotomni.TimeTrial.Formats
 import ai.dragonfly.monotomni._
 import ai.dragonfly.monotomni.connection.TimeServerConnectionFactory
 import ai.dragonfly.monotomni.connection.http.TimeServerConnectionHTTP
@@ -14,21 +13,21 @@ import scala.concurrent.{Future, Promise}
 
 object URL extends TimeServerConnectionFactory {
   override val defaultTimeout: Int = 3000
-  override val defaultFormat: TimeTrialFormat = TTF.BINARY
+  override val defaultFormat: Formats.Format = Formats.BINARY
 }
 
-case class URL(override val uri:URI, override val defaultFormat:TimeTrialFormat, override val defaultTimeout:Int) extends TimeServerConnectionHTTP {
+case class URL(override val uri:URI, override val defaultFormat:Formats.Format, override val defaultTimeout:Int) extends TimeServerConnectionHTTP {
 
   override val path: String = uri.toString
 
-  override def supportedFormats:Seq[TimeTrialFormat] = Seq(TTF.BINARY, TTF.STRING, TTF.JSON, TTF.XML)
+  override def supportedFormats:Seq[Formats.Format] = Seq(Formats.BINARY, Formats.STRING, Formats.JSON, Formats.XML)
 
   /**
    * Execute a TimeTrial
    * @param format The format of the server response message.  Configurable for custom time servers.
    * @return PendingTimeTrial
    */
-  override def timeTrial(format:TimeTrialFormat = defaultFormat, timeoutMilliseconds:Int = defaultTimeout): PendingTimeTrial = {
+  override def timeTrial(format:Formats.Format = defaultFormat, timeoutMilliseconds:Int = defaultTimeout): PendingTimeTrial = {
     val urlTxt = s"$uri/$format/"
 
     val promisedTimeTrial:Promise[TimeTrial] = Promise[TimeTrial]()

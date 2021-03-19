@@ -3,23 +3,61 @@
 <head>
 <meta charset="UTF-8">
 <title>Mono+Omni Demo</title>
-
+<script type="application/javascript">
+var HOST_NAME = "Mono+Omni Demo";
+</script>
+<style>
+a {color: #DDDDDD;}
+</style>
 </head>
-<body>
-<h1>Mono+Omni Browser Tests</h1><br />
+<body style="background-color: #444444; color: #DDDDDD; font-family: Helvetica, sans-serif;">
+<div style="width:500px; float:right;">
 <a href="http://localhost:8080/demo/index.html">Test Mono+Omni with AJAX</a><br />
-<a href="http://127.0.0.1:8080/demo/index.html">Test Mono+Omni over JSONP</a><br />
-Console Output:<br />
-<pre id="output" style="background-color: #000000; color: #eeeeee; width: 80%; height: 50%; max-height: 600px; overflow-y: scroll; overflow: scroll;"></pre>
+<a href="http://127.0.0.1:8080/demo/index.html">Test Mono+Omni over JSONP</a>
+</div>
+<h1>Mono+Omni Demo</h1><br />
+<div style="width:48%; float:left;">
+Scala.JS Application Output:<br />
+<pre id="app" style="background-color: #222222; color: #EEFF44; padding:16px; width: 100%; height: 50%; max-height: 600px; overflow-y: scroll; overflow: scroll;"></pre>
+</div>
+<div style="width:48%; float:right;">
+JavaScript Library Output:<br />
+<pre id="lib" style="background-color: #222222; color: #44FF44; padding:16px; width: 80%; height: 50%; max-height: 600px; overflow-y: scroll; overflow: scroll;"></pre>
 <script type="application/javascript">
 var print = console.log
-console.log = function(s) {
-  var output = document.getElementById("output");
-  output.innerHTML = output.innerHTML + "<br />" + s;
-  print(s);
-}
+
+// write console output to div
+console.log = (function(){
+  var app = document.getElementById("app");
+  return function(s) {
+    app.innerHTML = app.innerHTML + "<br />" + s;
+    print(s);
+  }
+})();
 </script>
 <script type="application/javascript" src="./js/monotomni-opt.js"></script>
+<script type="application/javascript">
+/* Demo JavaScript library features: */
 
+var jsLib = (function(){
+  var lib = document.getElementById("lib");
+  return {
+    "log" : function(s){
+      lib.innerHTML = lib.innerHTML + "<br />" + s;
+      print(s);
+    }
+  }
+})();
+
+var now = monotomni.now();
+jsLib.log("var now = monotomni.now(); => " + now);
+var tt = monotomni.TimeTrial(now);
+jsLib.log("var tt = monotomni.TimeTrial(now); => " + tt);
+var str = monotomni.TimeTrial.BINARY(monotomni.TimeTrial.XML(tt.XML).BINARY).STRING;
+jsLib.log("var str = monotomni.TimeTrial.BINARY(monotomni.TimeTrial.XML(tt.XML).BINARY).STRING;" + str);
+jsLib.log('try { throw monotomni.InvalidTimeTrialJSON("neenerneenerneener") } catch (e) {console.log(e)}');
+try { throw monotomni.InvalidTimeTrialJSON("neenerneenerneener") } catch (e) {jsLib.log(e)}
+
+</script>
 </body>
 </html>

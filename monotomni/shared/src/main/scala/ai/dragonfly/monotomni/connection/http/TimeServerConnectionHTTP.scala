@@ -6,5 +6,5 @@ import ai.dragonfly.monotomni.connection.TimeServerConnection
 
 trait TimeServerConnectionHTTP extends TimeServerConnection {
   val uri:URI
-  override val path: String = uri.toString
+  val path: String = uri.toString
 }

@@ -5,8 +5,8 @@ import java.util.{Timer, TimerTask}
 import java.util.concurrent.TimeoutException
 
 import ai.dragonfly.monotomni._
-import TimeTrial.{TimeTrialFormat => TTF}
-import TTF.TimeTrialFormat
+import TimeTrial.Formats
+import ai.dragonfly.monotomni.TimeTrial.Formats.Format
 import ai.dragonfly.monotomni.connection.TimeServerConnectionFactory
 import ai.dragonfly.monotomni.connection.http.TimeServerConnectionHTTP
 
@@ -21,7 +21,12 @@ import scala.scalajs.js.annotation.JSExportTopLevel
 
 object JSONP extends TimeServerConnectionFactory {
   override val defaultTimeout: Int = 5000
-  override val defaultFormat: TimeTrialFormat = TTF.JSONP
+  override val defaultFormat: Formats.Format = Formats.JSONP
+
+  private lazy val pendingTimeTrials: mutable.Map[MOI,PendingTimeTrial] = mutable.Map[MOI,PendingTimeTrial]()
+  def apply(pendingTimeTrial: PendingTimeTrial): PendingTimeTrial = {
+    pendingTimeTrials.getOrElseUpdate(pendingTimeTrial.moi, pendingTimeTrial)
+  }
 
   @JSExportTopLevel("LOG_JSONP_TIME_TRIAL")
   def logTimeTrial(pendingTimeTrialId:String, serverTimeStamp: String): TimeTrial = logTimeTrial(
@@ -36,32 +41,27 @@ object JSONP extends TimeServerConnectionFactory {
     tt
   }
 
-  private lazy val pendingTimeTrials: mutable.Map[MOI,PendingTimeTrial] = mutable.Map[MOI,PendingTimeTrial]()
-  def apply(pendingTimeTrial: PendingTimeTrial): PendingTimeTrial = {
-    pendingTimeTrials.getOrElseUpdate(pendingTimeTrial.moi, pendingTimeTrial)
-  }
-
   def timeout(timedOutTimeTrial:PendingTimeTrial):Unit = pendingTimeTrials -= timedOutTimeTrial.moi
 
+  override val supportedFormats: Seq[Format] = Seq(Formats.JSONP)
 }
 
-case class JSONP (override val uri:URI, override val defaultFormat:TimeTrialFormat, override val defaultTimeout:Int) extends TimeServerConnectionHTTP {
+case class JSONP (override val uri:URI, override val defaultFormat:Formats.Format, override val defaultTimeout:Int) extends TimeServerConnectionHTTP {
 
   /** TimeTrialFormat.BINARY not supported!
    *
    * @return a Seq of supported TimeTrialFormat flags.
    */
-  override def supportedFormats:Seq[TimeTrialFormat] = Seq(TTF.JSONP)
+  override def supportedFormats:Seq[Formats.Format] = JSONP.supportedFormats
 
-  override def timeTrial(format: TimeTrialFormat = defaultFormat, timeoutMilliseconds:Int = defaultTimeout): PendingTimeTrial = {
+  override def timeTrial(format: Formats.Format = defaultFormat, timeoutMilliseconds:Int = defaultTimeout): PendingTimeTrial = {
     try {
 
       val document = org.scalajs.dom.document
       val scriptTag = document.createElement("script")
       scriptTag.setAttribute("type", "text/javascript")
       val promisedTimeTrial:Promise[TimeTrial] = Promise[TimeTrial]()
-      val pendingTimeTrial:PendingTimeTrial = PendingTimeTrial(promisedTimeTrial, timeoutMilliseconds)
-      JSONP(pendingTimeTrial)
+      val pendingTimeTrial:PendingTimeTrial = JSONP(PendingTimeTrial(promisedTimeTrial, timeoutMilliseconds))
       val urlTxt = s"$uri/JSONP/${pendingTimeTrial.moi}"
       scriptTag.setAttribute("src", urlTxt)
       document.getElementsByTagName("head")(0).appendChild(scriptTag)

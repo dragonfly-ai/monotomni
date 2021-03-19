@@ -7,13 +7,14 @@ import ai.dragonfly.distributed.Distributable
 
 import scala.language.implicitConversions
 import scala.concurrent.Promise
+import scala.scalajs.js.annotation.JSExportAll
 
-object TimeTrial {
+object TimeTrial extends native.TimeTrial {
 
   /** TimeTrialFormat enumeration as flags for content types supported by instances of TimeServerConnection. */
-  object TimeTrialFormat extends Enumeration {
-    type TimeTrialFormat = Value
-    val BINARY, STRING, JSON, XML, JSONP = Value
+  object Formats extends Enumeration {
+    type Format = Value
+    @JSExportAll val BINARY, STRING, JSON, XML, JSONP = Value
   }
 
   /* Binary TimeTrial Utilities */
@@ -38,33 +39,33 @@ object TimeTrial {
    * @param inputStream an input stream to read a TimeTrial from.
    * @return TimeTrial
    */
-  def BINARY(inputStream: InputStream): TimeTrial = {
+  implicit def inputStreamToByteArray(inputStream: InputStream): Array[Byte] = {
     val bytes = new Array[Byte](TimeTrial.BYTES)
     inputStream.read(bytes)
-    BINARY(bytes)
+    bytes
   }
 
-  def fromInputStream(format:TimeTrialFormat.TimeTrialFormat, inputStream: InputStream): TimeTrial = {
+  def fromInputStream(format:Formats.Format, inputStream: InputStream): TimeTrial = {
     format match {
-      case TimeTrialFormat.BINARY => TimeTrial.BINARY(inputStream)
-      case TimeTrialFormat.STRING => TimeTrial.STRING(inputStream)
-      case TimeTrialFormat.JSON => TimeTrial.JSON(inputStream)
+      case Formats.BINARY => TimeTrial.BINARY(inputStream)
+      case Formats.STRING => TimeTrial.STRING(inputStream)
+      case Formats.JSON => TimeTrial.JSON(inputStream)
       case _ => TimeTrial.XML(inputStream)
     }
   }
 
-  private def chooseException(sc:StringContext, s:String):Exception = sc match {
+  private def exceptionSelection(sc:StringContext, s:String):Exception = sc match {
     case sc1 if sc1 == scSTRING => InvalidTimeTrialString(s)
     case sc1 if sc1 == scJSON => InvalidTimeTrialJSON(s)
     case sc1 if sc1 == scXML => InvalidTimeTrialXML(s)
   }
 
   private def parse(sc:StringContext, s:String):TimeTrial = {
-    val seq:Option[Seq[String]] = try { sc.s.unapplySeq(s.trim()) } catch { case _:Throwable => throw chooseException(sc, s) }
+    val seq:Option[Seq[String]] = try { sc.s.unapplySeq(s.trim()) } catch { case _:Throwable => throw exceptionSelection(sc, s) }
     seq match {
       case Some(Seq(N2Long(t))) => TimeTrial(java.lang.Long.parseLong(t))
       case Some(Seq(t:String)) => throw InvalidTimeTrialParameter(t)
-      case _ => throw chooseException(sc,s)
+      case _ => throw exceptionSelection(sc,s)
     }
   }
 
@@ -135,9 +136,9 @@ object TimeTrial {
     Fails( () => TimeTrial.XML(<TimeTrial t="1614218679808" extra="Mono+Omni" />.toString) )
     Fails( () => TimeTrial.XML(<TimeTrial serverTimeStamp="1614218679808" />.toString) )
   }
-
 }
 
+@JSExportAll
 case class TimeTrial(serverTimeStamp:Long = System.currentTimeMillis()) {
   def BINARY:Array[Byte] = ByteBuffer.allocate(TimeTrial.BYTES).putLong(serverTimeStamp).array()
   def STRING:String = TimeTrial.scSTRING.s(serverTimeStamp)
@@ -145,6 +146,7 @@ case class TimeTrial(serverTimeStamp:Long = System.currentTimeMillis()) {
   def XML:String = TimeTrial.scXML.s(serverTimeStamp)
 }
 
+@JSExportAll
 case class PendingTimeTrial(timeTrialPromise:Promise[TimeTrial], timeoutMilliseconds: Long, start:Long=System.currentTimeMillis(), moi:MOI = Mono+Omni()) extends Distributable
 
 object TimeTrialJSONP {
@@ -175,30 +177,17 @@ object TimeTrialJSONP {
   }
 }
 
+@JSExportAll
 case class TimeTrialJSONP(pendingTimeTrialId:MOI, timeTrial:TimeTrial) {
   def JSONP:String = TimeTrialJSONP.scJSONP.s(pendingTimeTrialId, timeTrial.serverTimeStamp)
 }
-/*
- * Exception Types:
- */
-case class InvalidTimeTrialBinary(bytes:Array[Byte]) extends Exception(s"Invalid TimeTrial.  Expected length: ${TimeTrial.BYTES} but observed length: ${bytes.length} on ${byteArray2String(bytes)}")
 
-case class InvalidTimeTrialString(s:String) extends Exception(s"""Invalid TimeTrial String: "$s"""")
+@JSExportAll case class InvalidTimeTrialBinary(bytes:Array[Byte]) extends Exception(s"Invalid TimeTrial.  Expected length: ${TimeTrial.BYTES} but observed length: ${bytes.length} on ${byteArray2String(bytes)}")
 
-case class InvalidTimeTrialJSON(rawJSON:String) extends Exception(s"""Invalid TimeTrial JSON: "$rawJSON"""")
+@JSExportAll case class InvalidTimeTrialString(s:String) extends Exception(s"""Invalid TimeTrial String: "$s"""")
+@JSExportAll case class InvalidTimeTrialJSON(rawJSON:String) extends Exception(s"""Invalid TimeTrial JSON: "$rawJSON"""")
+@JSExportAll case class InvalidTimeTrialParameter(t:String) extends Exception(s"Invalid TimeTrial Parameter:\n\tTimeTrial('$t'))")
+@JSExportAll case class InvalidTimeTrialXML(rawXML: String) extends Exception(s"""Invalid TimeTrial XML:\n\t"$rawXML"""")
+@JSExportAll case class InvalidTimeTrialJSONP(rawJSONP:String) extends Exception(s"""Invalid TimeTrial JSONP: "$rawJSONP"""")
 
-object InvalidTimeTrialParameter {
-  private def errorMessage(ok:Boolean, s:String, typeName:String):String = s"$s${ if (ok) " // OK!" else s" // ERROR! Can't read $typeName."}"
-  def int(i:String):String =  errorMessage(N2Int.matches(i), i+",", "Int")
-  def long(l:String):String =  errorMessage(N2Long.matches(l), l, "Long")
-}
-
-case class InvalidTimeTrialParameter(t:String) extends Exception({ import InvalidTimeTrialParameter._; s"Invalid TimeTrial Parameter:\n\tTimeTrial(${long(t)})"})
-
-case class InvalidTimeTrialXML(rawXML: String) extends Exception(s"""Invalid TimeTrial XML:\n\t"$rawXML"""")
-
-
-case class InvalidTimeTrialParametersJSONP(pendingTimeTrialId:String, t:String) extends Exception(s"Invalid Pending TimeTrial JSONP Parameters: moi=$pendingTimeTrialId and t=$t")
-
-case class InvalidTimeTrialJSONP(rawJSONP:String) extends Exception(s"""Invalid TimeTrial JSONP: "$rawJSONP"""")
-
+@JSExportAll case class InvalidTimeTrialParametersJSONP(pendingTimeTrialId:String, t:String) extends Exception(s"Invalid Pending TimeTrial JSONP Parameters: moi=$pendingTimeTrialId and t=$t")

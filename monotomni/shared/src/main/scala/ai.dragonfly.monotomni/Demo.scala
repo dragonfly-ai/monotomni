@@ -2,8 +2,8 @@ package ai.dragonfly.monotomni
 
 import java.util.concurrent.atomic.AtomicInteger
 
-import ai.dragonfly.monotomni.TimeTrial.TimeTrialFormat
-import ai.dragonfly.monotomni.connection.TimeServerConnectionFactory
+import ai.dragonfly.monotomni.TimeTrial.Formats
+import ai.dragonfly.monotomni.connection.TimeServerConnection
 
 import scala.util.{Failure, Success}
 
@@ -26,10 +26,9 @@ object Demo extends App {
     println("Testing TimeServer and TimeServerClient TimeTrials:")
     val uri1: java.net.URI = new java.net.URI("http://localhost:8080/time")
     println(s"testing on URL: $uri1")
-    val timeServerConnectionFactory1:TimeServerConnectionFactory = native.connection.Default(uri1)
 
     /* Default Connection */
-    Remote(timeServerConnectionFactory1(uri1)) onComplete {
+    Remote(native.connection.Default(uri1)) onComplete {
         case Success(r:Remote) =>
             implicit val remote:Remote = r
             println(s"Approximate Monotonically Increasing Omni-Present Identifiers from:\n\t$remote")
@@ -42,8 +41,7 @@ object Demo extends App {
     val uri2:java.net.URI = new java.net.URI("http://127.0.0.1:8080/time")
 
     /* alternatively */
-    val timeServerConnectionFactory2:TimeServerConnectionFactory = native.connection.Default(uri2)
-    implicit val r:Remote = new Remote(timeServerConnectionFactory2(uri2, TimeTrialFormat.JSON))
+    implicit val r:Remote = new Remote(native.connection.Default(uri2, Formats.JSON))
     r.ready(() => {
         println(s"Approximate Monotonically Increasing Omni-Present Identifiers from:\n\t$r")
         print(s"\t[${Remo+Ami()}")
