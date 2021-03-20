@@ -48,7 +48,6 @@ case class AJAX(override val uri:URI, override val defaultFormat:Formats.Format,
     xhr.timeout = timeoutMilliseconds
 
     xhr.onload = (e:Event) => {
-      // When all goes to plan:
       if (xhr.status == 200) {
         promisedTimeTrial.success(
           format match {
@@ -68,7 +67,6 @@ case class AJAX(override val uri:URI, override val defaultFormat:Formats.Format,
       }
     }
 
-    // What more could possibly go wrong?
     xhr.ontimeout = (e: dom.Event) => {
       println(e)
       promisedTimeTrial.failure( new TimeoutException() )

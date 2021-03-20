@@ -93,7 +93,6 @@ object TimeTrial extends native.TimeTrial {
    * @return the TimeTrial object encoded in the JSON String
    */
   def JSON(rawJSON:String):TimeTrial = {
-    //println(s"$rawJSON ${parse(scJSON, rawJSON)}")
     parse(scJSON, rawJSON)
   }
 

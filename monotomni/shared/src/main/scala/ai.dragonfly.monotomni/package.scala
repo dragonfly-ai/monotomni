@@ -20,7 +20,7 @@ package object monotomni {
 
   object Omni extends Clock {
 
-    /* dawnOfTime = 1615141312110L
+    /** dawnOfTime = 1615141312110L
      * Helpful mnemonic: the digits of dawnOfTime count down from 16 to 11 then ends with a 0: 16 15 14 13 12 11 0 L
      * println(new java.util.Date(1615141312110L)) -> Sun Mar 07 11:21:52 MST 2021 */
 
@@ -44,7 +44,7 @@ package object monotomni {
     def +(omni:Omni.type):Omni.type = omni
   }
 
-  type MOI = Long // Type Alias to communicate the difference between longs and Mono+Omni literals.
+  type MOI = Long // Type Alias communicates the difference between longs and Mono+Omni literals.
 
   implicit def byteArray2String(bytes: Array[Byte]): String = s"Array[Byte](${
     if (bytes.length < 1) "()" else {

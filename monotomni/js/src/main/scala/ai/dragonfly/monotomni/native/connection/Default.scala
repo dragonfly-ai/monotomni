@@ -22,15 +22,15 @@ object Default {
 
   def apply(uri:URI):TimeServerConnectionFactory = {
     val timeServerConnection:TimeServerConnectionFactory = try {
-      println("Try AJAX")
+      println("AJAX?")
       if (window.location.hostname == uri.getHost) http.AJAX
       else {
-        println("Domains don't match!\nTry JSONP")
+        println("Domains don't match!\nJSONP?")
         http.JSONP
       }
     } catch {
       case t: Throwable =>
-        println("No Browser Context Available!  No AJAX, No JSONP.\nTry Node.JS")
+        println("No Browser Context Available!\nNode.JS?")
         http.NodeJS
     }
     println(s"Connecting to:\n\tTimeServer@$uri\n\twith $timeServerConnection")

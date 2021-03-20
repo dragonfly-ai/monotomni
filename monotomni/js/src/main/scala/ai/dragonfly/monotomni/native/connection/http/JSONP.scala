@@ -48,8 +48,8 @@ object JSONP extends TimeServerConnectionFactory {
 
 case class JSONP (override val uri:URI, override val defaultFormat:Formats.Format, override val defaultTimeout:Int) extends TimeServerConnectionHTTP {
 
-  /** TimeTrialFormat.BINARY not supported!
-   *
+  /**
+   * JSONP clients use their own format.
    * @return a Seq of supported TimeTrialFormat flags.
    */
   override def supportedFormats:Seq[Formats.Format] = JSONP.supportedFormats

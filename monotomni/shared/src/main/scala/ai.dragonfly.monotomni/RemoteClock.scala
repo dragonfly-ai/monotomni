@@ -11,6 +11,7 @@ import scala.util.{Failure, Success}
 import scala.scalajs.js
 import js.annotation.{JSExport, JSExportAll}
 
+/* TODO: Reduce Log Pollution */
 
 object RemoteClock {
   val defaultMaxWait:Long = 60000L
@@ -64,11 +65,6 @@ class RemoteClock(private val timeServerConnection: TimeServerConnection, maxWai
       case Failure(t:Throwable) => throw t
     }
   }
-
-  /**
-   * @return E(Δt)
-   */
-  private def `E(Δt)`:Future[Long] = for { ready <- promisedDT.future } yield ready()
 
   private def setDeltaT(dT:Long):Unit = synchronized {
     // only set ΔT if it changes.
@@ -153,7 +149,7 @@ class RemoteClock(private val timeServerConnection: TimeServerConnection, maxWai
   import java.util.{Timer, TimerTask}
   val timeTrialScheduler:Timer = new Timer(s"Remote $this timeout monitor.")
   private def scheduleNextTrial(delay:Long, inBurstsOf:Int = 3):Unit = {
-    println(s"scheduleNextTrial($delay MS /* waits ${delay / 1000} Seconds */)")
+    //println(s"scheduleNextTrial($delay MS /* waits ${delay / 1000} Seconds */)")
     timeTrialScheduler.schedule(
       new TimerTask() {
         override def run():Unit = {
@@ -173,7 +169,7 @@ class RemoteClock(private val timeServerConnection: TimeServerConnection, maxWai
             }
           } onComplete {
             case Success(waitTimes:Seq[Long]) => scheduleNextTrial( waitTimes.max )
-            case Failure(t) => println(t) // try a few more times, then fail this TimeServerConnection?
+            case Failure(t) => println(t)
           }
         }
       },

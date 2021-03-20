@@ -72,7 +72,6 @@ case class NodeJS(override val uri:URI, override val defaultFormat:Formats.Forma
         }
       })
 
-      //res.on("end", () => {})
     })
 
     PendingTimeTrial(promisedTimeTrial, timeoutMilliseconds)

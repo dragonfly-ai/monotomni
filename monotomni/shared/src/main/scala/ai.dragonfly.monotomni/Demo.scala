@@ -3,7 +3,6 @@ package ai.dragonfly.monotomni
 import java.util.concurrent.atomic.AtomicInteger
 
 import ai.dragonfly.monotomni.TimeTrial.Formats
-import ai.dragonfly.monotomni.connection.TimeServerConnection
 
 import scala.util.{Failure, Success}
 
