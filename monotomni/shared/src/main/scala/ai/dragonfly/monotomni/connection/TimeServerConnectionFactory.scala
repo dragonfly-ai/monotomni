@@ -13,5 +13,3 @@ trait TimeServerConnectionFactory {
 
   def apply(uri:URI, format:Format = defaultFormat, timeout:Int = defaultTimeout):TimeServerConnection
 }
-
-// curried rice?

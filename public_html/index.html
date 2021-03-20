@@ -49,14 +49,36 @@ var jsLib = (function(){
   }
 })();
 
-var now = monotomni.now();
-jsLib.log("var now = monotomni.now(); => " + now);
+jsLib.log('Mono+Omni.toString() => ' + (Omni.toString()));
+var now = Mono+Omni.now();
+jsLib.log('var now = Mono+Omni.now(); => ' + now);
 var tt = monotomni.TimeTrial(now);
-jsLib.log("var tt = monotomni.TimeTrial(now); => " + tt);
+jsLib.log('var tt = monotomni.TimeTrial(now); => ' + tt);
 var str = monotomni.TimeTrial.BINARY(monotomni.TimeTrial.XML(tt.XML).BINARY).STRING;
-jsLib.log("var str = monotomni.TimeTrial.BINARY(monotomni.TimeTrial.XML(tt.XML).BINARY).STRING;" + str);
-jsLib.log('try { throw monotomni.InvalidTimeTrialJSON("neenerneenerneener") } catch (e) {console.log(e)}');
-try { throw monotomni.InvalidTimeTrialJSON("neenerneenerneener") } catch (e) {jsLib.log(e)}
+jsLib.log('var str = monotomni.TimeTrial.BINARY(monotomni.TimeTrial.XML(tt.XML).BINARY).STRING;' + str);
+jsLib.log('try { throw monotomni.InvalidTimeTrialJSON("neenerneenerneener") } catch (e) {console.log(e.toString())}');
+try { throw monotomni.InvalidTimeTrialJSON("neenerneenerneener") } catch (e) {jsLib.log(e.toString())}
+jsLib.log('var ajaxXMLConnection = monotomni.connection.http.AJAX(new URL("http://localhost:8080/time"), monotomni.TimeTrial.Formats.XML, 1000);');
+var ajaxXMLConnection = monotomni.connection.http.AJAX(new URL("http://localhost:8080/time"), monotomni.TimeTrial.Formats.XML, 1000);
+jsLib.log('var remoteClock = monotomni.RemoteClock(ajaxXMLConnection);');
+var remoteClock = monotomni.RemoteClock(ajaxXMLConnection);
+jsLib.log(remoteClock.toString());
+
+var localMOI = [];
+var remoteAMI = [];
+
+function repeatedIdGeneration(){
+  var moi = Mono+Omni();
+
+  var ami = remoteClock.ami();
+  jsLib.log('remoteAMI[' + remoteAMI.length + '] = ' + ami);
+  remoteAMI.push(ami);
+  setTimeout(repeatedIdGeneration, Math.random() * 5000);
+}
+
+remoteClock.ready(function(){
+  repeatedIdGeneration();
+});
 
 </script>
 </body>

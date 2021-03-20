@@ -6,12 +6,9 @@ import java.nio.ByteBuffer
 import ai.dragonfly.monotomni
 
 import scala.scalajs.js
-import scala.scalajs.js.JavaScriptException
-import scala.scalajs.js.annotation.JSExportAll
 import scala.scalajs.js.typedarray.{ArrayBuffer, TypedArrayBuffer, Uint8Array}
 
 trait TimeTrial {
-
   val fromArrayBuffer:js.Function1[ArrayBuffer, monotomni.TimeTrial] = (arrayBuffer:ArrayBuffer) => {
     val wrapped:ByteBuffer = TypedArrayBuffer.wrap(arrayBuffer)
     val bytes:Array[Byte] = new Array[Byte](monotomni.TimeTrial.BYTES)

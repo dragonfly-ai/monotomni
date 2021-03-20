@@ -14,8 +14,8 @@ import scala.scalajs.js.JavaScriptException
 
 package object native {
 
-  implicit def jsBigInt2Long(l:js.BigInt):Long = java.lang.Long.parseLong(l.toString())
-  implicit def Long2jsBigInt(L:Long):js.BigInt = native.String2jsBigInt(L.toString())
+  implicit def jsBigInt2Long(bi:js.BigInt):Long = java.lang.Long.parseLong(bi.toString())
+  implicit def Long2jsBigInt(l:Long):js.BigInt = native.String2jsBigInt(l.toString)
 
   implicit def URL2URI(url:URL):java.net.URI = new java.net.URI(url.toString)
 
@@ -57,24 +57,22 @@ package object native {
   )
 
   val `Mono+Omni.Scope`:js.Dynamic = ClassAndCompanion2JS(
-    `Mono+Omni`.apply _,
+    () => Long2jsBigInt(Mono+Omni()),
     "dawnOfTime" -> Long2jsBigInt(Mono+Omni.dawnOfTime),
-    "host" -> Long2jsBigInt(Mono+Omni.host)
+    "host" -> Long2jsBigInt(Mono+Omni.host),
+    "now" -> (() => Long2jsBigInt(Mono+Omni.now())),
+    "toString" -> Omni.toString _
   )
 
   //js.Dynamic.global.updateDynamic("Mono+Omni")(`Mono+Omni.Scope`) // window["Mono+Omni"]
   //js.Dynamic.global.updateDynamic("Mono〸Omni")(`Mono+Omni.Scope`) // global: Mono〸Omni
 
-  val `Remo+Ami.Scope`:js.Dynamic = ClassAndCompanion2JS(
-    (remote:Remote, moi:MOI) => if(js.isUndefined(moi)) Remo+Ami()(remote) else Remo+Ami(moi)(remote)
-  )
-
-  val remote:js.Dynamic = ClassAndCompanion2JS(
-    (timeServerConnection: TimeServerConnection, maxWait:js.BigInt) => Remote(
+  val remoteClock:js.Dynamic = ClassAndCompanion2JS(
+    (timeServerConnection: TimeServerConnection, maxWait:js.BigInt) => new ai.dragonfly.monotomni.RemoteClock(
       timeServerConnection,
-      if(js.isUndefined(maxWait)) Remote.defaultMaxWait else maxWait
+      if(js.isUndefined(maxWait)) RemoteClock.defaultMaxWait else maxWait
     ),
-    "defaultMaxWait" -> Long2jsBigInt(Remote.defaultMaxWait)
+    "defaultMaxWait" -> Long2jsBigInt(RemoteClock.defaultMaxWait)
   )
 
   def timeServerConnection(tscf:TimeServerConnectionFactory):js.Dynamic = ClassAndCompanion2JS(
@@ -88,30 +86,33 @@ package object native {
     "supportedFormats" -> tscf.supportedFormats
   )
 
-  def wrapExceptionInJS(f:String => Throwable):String => JavaScriptException = (s:String) => JavaScriptException(f(s))
+  def exceptionJS(f:String => Throwable):String => JavaScriptException = (s:String) => JavaScriptException(f(s))
+
+  @JSExportTopLevel("Mono") val mono:js.Dynamic = js.Dynamic.literal(
+    "valueOf" -> (() => js.BigInt(0)),
+    "toString" -> (() => "")
+  )
+  @JSExportTopLevel("Omni") val omni:js.Dynamic = `Mono+Omni.Scope`
 
   @JSExportTopLevel("monotomni")
   val JavaScriptScope:js.Dynamic = js.Dynamic.literal(
-    "Mono+Omni" -> `Mono+Omni.Scope`,  //u3038 = 〸
-    "Remo+Ami" -> `Remo+Ami.Scope`,  //u3038 = 〸
-    "now" -> (() => Long2jsBigInt(System.currentTimeMillis())),
     // TimeTrial:
     "TimeTrial" -> timeTrial,
     "PendingTimeTrial" -> pendingTimeTrial,
     "TimeTrialJSONP" -> timeTrialJSONP,
     // TimeTrial Exceptions:
     // "InvalidTimeTrialBinary" -> InvalidTimeTrialBinary.apply _,  // not meaningful in JavaScript library context
-    "InvalidTimeTrialString" -> wrapExceptionInJS(InvalidTimeTrialString.apply),
-    "InvalidTimeTrialJSON" -> wrapExceptionInJS(InvalidTimeTrialJSON.apply),
-    "InvalidTimeTrialParameter" -> wrapExceptionInJS(InvalidTimeTrialParameter.apply),
-    "InvalidTimeTrialXML" -> wrapExceptionInJS(InvalidTimeTrialXML.apply),
+    "InvalidTimeTrialString" -> exceptionJS(InvalidTimeTrialString.apply),
+    "InvalidTimeTrialJSON" -> exceptionJS(InvalidTimeTrialJSON.apply),
+    "InvalidTimeTrialParameter" -> exceptionJS(InvalidTimeTrialParameter.apply),
+    "InvalidTimeTrialXML" -> exceptionJS(InvalidTimeTrialXML.apply),
     "InvalidTimeTrialParametersJSONP" -> ((pendingTimeTrialId:String, t:String) => JavaScriptException(InvalidTimeTrialParametersJSONP(pendingTimeTrialId, t))),
-    "InvalidTimeTrialJSONP" -> wrapExceptionInJS(InvalidTimeTrialJSONP.apply),
+    "InvalidTimeTrialJSONP" -> exceptionJS(InvalidTimeTrialJSONP.apply),
     // Remote:
-    "Remote" -> remote,
+    "RemoteClock" -> remoteClock,
     // Remote Exceptions:
     "FailedTimeServerConnectionSynchronization" -> FailedTimeServerConnectionSynchronization.apply _,
-    "RemoteConnectionNotReady" -> RemoteConnectionNotReady.apply _,
+    "RemoteConnectionNotReady" -> RemoteClockNotReady.apply _,
     "connection" -> js.Dynamic.literal(
       "http" -> js.Dynamic.literal(
         "AJAX" -> timeServerConnection(AJAX),

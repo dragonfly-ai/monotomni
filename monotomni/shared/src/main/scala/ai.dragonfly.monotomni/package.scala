@@ -1,17 +1,49 @@
 package ai.dragonfly
 
+import java.util.concurrent.atomic.AtomicLong
+
 import scala.language.postfixOps
 import scala.language.implicitConversions
 import ai.dragonfly.monotomni.native
 
 import scala.concurrent.ExecutionContext
+import scala.scalajs.js.annotation.JSExport
 import scala.util.matching.Regex
 
 package object monotomni {
 
-  implicit val ec:ExecutionContext = native.executor
+  implicit val executionContext:ExecutionContext = native.executor
 
-  val Omni:`Mono+Omni`.type = `Mono+Omni`
+  trait Clock {
+    def now():Long
+  }
+
+  object Omni extends Clock {
+
+    /* dawnOfTime = 1615141312110L
+     * Helpful mnemonic: the digits of dawnOfTime count down from 16 to 11 then ends with a 0: 16 15 14 13 12 11 0 L
+     * println(new java.util.Date(1615141312110L)) -> Sun Mar 07 11:21:52 MST 2021 */
+
+    final val dawnOfTime:Long = 1615141312110L // timestamp of the birth of this library
+    final val host:Long = 0x0000000F & native.HostName.hostName.hashCode() // can't use Byte.  in JavaScript environments, it's an Int/Double
+    private final val counter:AtomicLong = new AtomicLong(0L)  // overflows safely with bitmask.  No need to ever reset it.
+    private def count():Long = synchronized { 0x0000fff0L & (counter.getAndIncrement() << 8) } // mask off all but least significant 24 bits.
+    @inline private def shiftTime(ts:Long):Long = (ts - dawnOfTime >>> 8) << 32
+    def apply():MOI = shiftTime(System.currentTimeMillis()) | count() | host
+    override def now():Long = System.currentTimeMillis()
+
+    @JSExport override def toString: String = s"Mono+Omni( dawnOfTime = $dawnOfTime, host = $host, counter = ${counter.get()} )"
+
+  }
+
+  type MonotOmni = Omni.type
+
+  object Mono {
+    override def toString:String = ""
+    def +(l:Long):Long = l
+    def +(omni:Omni.type):Omni.type = omni
+  }
+
   type MOI = Long // Type Alias to communicate the difference between longs and Mono+Omni literals.
 
   implicit def byteArray2String(bytes: Array[Byte]): String = s"Array[Byte](${
@@ -30,7 +62,6 @@ package object monotomni {
     override def toString: String = s"Moi($timestamp, $count, $hashMask)"
   }
 
-  val Ami:`Remo+Ami`.type = `Remo+Ami`
   type AMI = Long
 
   val N2Int:Regex = "([0-9]{1,10})".r
