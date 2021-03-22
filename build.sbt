@@ -26,11 +26,12 @@ lazy val monotomni = crossProject(JSPlatform, JVMPlatform).settings(
   name := "monotomni",
   libraryDependencies ++= Seq(
     "org.scala-lang.modules" %%% "scala-xml" % "1.3.0",
-    "ai.dragonfly.code" %%% "vector" % "0.302"
+    "ai.dragonfly.code" %%% "vector" % "0.302",
+    "biz.enef" %%% "slogging" % "0.6.2"
   ),
   mainClass in (Compile, run) := Some("ai.dragonfly.monotomni.Demo")
 ).jvmSettings(
-  libraryDependencies += "org.scala-js" %% "scalajs-stubs" % "1.0.0"
+  libraryDependencies += "org.scala-js" %% "scalajs-stubs" % "1.0.0",
 ).jsSettings(
   libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "1.1.0",
   scalaJSUseMainModuleInitializer := true

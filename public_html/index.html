@@ -11,20 +11,37 @@ a {color: #DDDDDD;}
 </style>
 </head>
 <body style="background-color: #444444; color: #DDDDDD; font-family: Helvetica, sans-serif;">
-<div style="width:500px; float:right;">
-<a href="http://localhost:8080/demo/index.html">Test Mono+Omni with AJAX</a><br />
-<a href="http://127.0.0.1:8080/demo/index.html">Test Mono+Omni over JSONP</a>
-</div>
 <h1>Mono+Omni Demo</h1><br />
+<div>
 <div style="width:48%; float:left;">
-Scala.JS Application Output:<br />
-<pre id="app" style="background-color: #222222; color: #EEFF44; padding:16px; width: 100%; height: 50%; max-height: 600px; overflow-y: scroll; overflow: scroll;"></pre>
+  <h2>Scala.JS Demo Application Output:</h2>
+<pre id="app" style="background-color: #222222; color: #88FFFF; padding:16px; width: 90%; height: 50%; max-height: 600px; overflow-y: scroll; overflow: scroll;"></pre>
 </div>
 <div style="width:48%; float:right;">
-JavaScript Library Output:<br />
-<pre id="lib" style="background-color: #222222; color: #44FF44; padding:16px; width: 80%; height: 50%; max-height: 600px; overflow-y: scroll; overflow: scroll;"></pre>
+<h2>JavaScript Library Output:</h2>
+<pre id="lib" style="background-color: #222222; color: #44FF44; padding:16px; width: 90%; height: 50%; max-height: 600px; overflow-y: scroll; overflow: scroll;"></pre>
+  Randomly Scheduled MOI: <span id="timerMOI"></span><br /><br />
+  <span id="clickMOI"><button onclick="newMOI()">New MOI</button></span> DOM Event MOI: <span id="eventMOI"></span><br />
+  <hr />
+  Randomly Scheduled AMI: <span id="timerAMI"></span><br /><br />
+  <span id="clickAMI"></span> DOM Event AMI: <span id="eventAMI"></span><br />
+</div>
+</div><br />
+<div style="width: 90%; float:left;">
+<h2>Logging (Level = Debug) Output:</h2>
+<pre id="err" style="background-color: #222222; color: #EEFF00; padding:16px; width: 80%; height: 50%; max-height: 600px; overflow-y: scroll; overflow: scroll;"></pre>
+</div>
 <script type="application/javascript">
 var print = console.log
+var error = console.error
+
+console.error = (function(){
+  var err = document.getElementById("err");
+  return function(s) {
+    err.innerHTML = err.innerHTML + "<br />" + s;
+    error(s);
+  }
+})();
 
 // write console output to div
 console.log = (function(){
@@ -49,15 +66,20 @@ var jsLib = (function(){
   }
 })();
 
-jsLib.log('Mono+Omni.toString() => ' + (Omni.toString()));
+function newMOI() {
+  var moi = Mono+Omni();
+  document.getElementById("eventMOI").innerHTML = moi + " ~ " + monotomni.MOI(moi);
+}
+
+jsLib.log('Mono+Omni.toString() => ' + Mono+Omni.toString());
 var now = Mono+Omni.now();
 jsLib.log('var now = Mono+Omni.now(); => ' + now);
 var tt = monotomni.TimeTrial(now);
 jsLib.log('var tt = monotomni.TimeTrial(now); => ' + tt);
 var str = monotomni.TimeTrial.BINARY(monotomni.TimeTrial.XML(tt.XML).BINARY).STRING;
 jsLib.log('var str = monotomni.TimeTrial.BINARY(monotomni.TimeTrial.XML(tt.XML).BINARY).STRING;' + str);
-jsLib.log('try { throw monotomni.InvalidTimeTrialJSON("neenerneenerneener") } catch (e) {console.log(e.toString())}');
-try { throw monotomni.InvalidTimeTrialJSON("neenerneenerneener") } catch (e) {jsLib.log(e.toString())}
+jsLib.log('try { throw monotomni.InvalidTimeTrialJSON("Who is Jason?") } catch (e) {console.log(e.toString())}');
+try { throw monotomni.InvalidTimeTrialJSON("Who is Jason?") } catch (e) {jsLib.log(e.toString())}
 jsLib.log('var ajaxXMLConnection = monotomni.connection.http.AJAX(new URL("http://localhost:8080/time"), monotomni.TimeTrial.Formats.XML, 1000);');
 var ajaxXMLConnection = monotomni.connection.http.AJAX(new URL("http://localhost:8080/time"), monotomni.TimeTrial.Formats.XML, 1000);
 jsLib.log('var remoteClock = monotomni.RemoteClock(ajaxXMLConnection);');
@@ -69,17 +91,22 @@ var remoteAMI = [];
 
 function repeatedIdGeneration(){
   var moi = Mono+Omni();
+  document.getElementById("timerMOI").innerHTML = moi + " ~ " + monotomni.MOI(moi);
 
   var ami = remoteClock.ami();
-  jsLib.log('remoteAMI[' + remoteAMI.length + '] = ' + ami);
-  remoteAMI.push(ami);
+  document.getElementById("timerAMI").innerHTML = ami + " ~ " + monotomni.AMI(ami, remoteClock);
   setTimeout(repeatedIdGeneration, Math.random() * 5000);
 }
 
+function newAMI() {
+  var ami = remoteClock.ami();
+  document.getElementById("eventAMI").innerHTML = ami + " ~ " + monotomni.AMI(ami, remoteClock);
+}
+
 remoteClock.ready(function(){
+  document.getElementById("clickAMI").innerHTML = '<button onclick="newAMI()">New AMI</button>'
   repeatedIdGeneration();
 });
-
 </script>
 </body>
 </html>

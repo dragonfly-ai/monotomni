@@ -2,17 +2,17 @@ package ai.dragonfly.monotomni.native.connection.http
 
 import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
-import java.util.concurrent.TimeoutException
 import java.net.URI
 
 import ai.dragonfly.monotomni._
 import TimeTrial.Formats
 import ai.dragonfly.monotomni.connection.TimeServerConnectionFactory
 import ai.dragonfly.monotomni.connection.http.TimeServerConnectionHTTP
-
+import ai.dragonfly.monotomni.native.connection.http.AJAX.defaultFormat
 import org.scalajs.dom
 import org.scalajs.dom.{Event, XMLHttpRequest, ext}
 
+import scala.collection.immutable.HashSet
 import scala.concurrent.Promise
 import scala.scalajs.js.typedarray.ArrayBuffer
 
@@ -29,23 +29,20 @@ import scala.scalajs.js.typedarray.ArrayBuffer
 object AJAX extends TimeServerConnectionFactory {
   override val defaultTimeout: Int = 3000
   override val defaultFormat: Formats.Format = Formats.BINARY
-  override val supportedFormats:Seq[Formats.Format] = Seq(Formats.BINARY, Formats.STRING, Formats.JSON, Formats.XML)
 }
 
-case class AJAX(override val uri:URI, override val defaultFormat:Formats.Format, override val defaultTimeout:Int) extends TimeServerConnectionHTTP {
+case class AJAX(override val uri:URI, override val format:Formats.Format, override val defaultTimeout:Int) extends TimeServerConnectionHTTP {
 
   new XMLHttpRequest()  // throw exception if run outside of browser environment.
 
-  override def supportedFormats:Seq[Formats.Format] = AJAX.supportedFormats
-
-  override def timeTrial(format: Formats.Format = defaultFormat, timeoutMilliseconds:Int = defaultTimeout): PendingTimeTrial = {
+  override def timeTrial(timeoutMS:Int = defaultTimeout): PendingTimeTrial = {
     val urlTxt = s"$uri/$format"
 
     val promisedTimeTrial:Promise[TimeTrial] = Promise[TimeTrial]()
 
     val xhr = new XMLHttpRequest()
     if (format == Formats.BINARY) xhr.responseType = "arraybuffer"
-    xhr.timeout = timeoutMilliseconds
+    xhr.timeout = timeoutMS
 
     xhr.onload = (e:Event) => {
       if (xhr.status == 200) {
@@ -67,15 +64,10 @@ case class AJAX(override val uri:URI, override val defaultFormat:Formats.Format,
       }
     }
 
-    xhr.ontimeout = (e: dom.Event) => {
-      println(e)
-      promisedTimeTrial.failure( new TimeoutException() )
-    }
-
     xhr.open("GET", urlTxt )
 
     xhr.send()
 
-    PendingTimeTrial(promisedTimeTrial, timeoutMilliseconds)
+    PendingTimeTrial(promisedTimeTrial, timeoutMS)
   }
 }

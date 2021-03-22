@@ -12,21 +12,22 @@ import scala.concurrent.Promise
 import scala.scalajs.js
 import js.Dynamic.{global => g}
 import js.DynamicImplicits._
+import scala.collection.immutable.HashSet
 import scala.scalajs.js.typedarray.Uint8Array
 
 
 object NodeJS extends TimeServerConnectionFactory {
   override val defaultTimeout: Int = 3000
   override val defaultFormat: Formats.Format = Formats.BINARY
-  override val supportedFormats: Seq[Format] = Seq(Formats.BINARY, Formats.STRING, Formats.JSON, Formats.XML)
 }
 
-case class NodeJS(override val uri:URI, override val defaultFormat:Formats.Format, override val defaultTimeout:Int) extends TimeServerConnectionHTTP {
+case class NodeJS(override val uri:URI, override val format:Formats.Format, override val defaultTimeout:Int) extends TimeServerConnectionHTTP {
+  // http or https?
+  val scheme: js.Dynamic = uri.getScheme match {
+    case "http" => g.require("http")
+    case "https" => g.require("https")
+  }
 
-  override def supportedFormats:Seq[Formats.Format] = NodeJS.supportedFormats
-
-  val http: js.Dynamic = g.require("http")
-  val https: js.Dynamic = g.require("https")
   val Buffer: js.Dynamic = g.require("buffer").Buffer
 
   trait Response extends js.Object {
@@ -38,19 +39,15 @@ case class NodeJS(override val uri:URI, override val defaultFormat:Formats.Forma
 
   /**
    * Execute a TimeTrial
-   * @param format The format of the server response message.  Configurable for custom time servers.
+   * @param timeoutMS timeTrial timeout in milliseconds.
    * @return PendingTimeTrial
    */
-  override def timeTrial(format:Formats.Format = defaultFormat, timeoutMilliseconds:Int = defaultTimeout): PendingTimeTrial = {
+  override def timeTrial(timeoutMS:Int = defaultTimeout): PendingTimeTrial = {
     val urlTxt = s"$uri/$format/"
 
     val promisedTimeTrial:Promise[TimeTrial] = Promise[TimeTrial]()
 
-    // http or https?
-    (uri.getScheme match {
-      case "http" => http
-      case "https" => https
-    }).get(urlTxt, new HttpRequestOptions(timeout = timeoutMilliseconds), (res:Response) => {
+    scheme.get(urlTxt, new HttpRequestOptions(timeout = timeoutMS), (res:Response) => {
       res.setEncoding("binary")
 
       res.on("data", (chunk: js.Any) => { // all valid responses fit in only one chunk.
@@ -63,17 +60,18 @@ case class NodeJS(override val uri:URI, override val defaultFormat:Formats.Forma
           )
         } catch {
           case jse: scala.scalajs.js.JavaScriptException =>
-            println(s"Error on $urlTxt")
-            println(jse.getMessage())
-            promisedTimeTrial.failure(jse)
+            logger.error(s"Error on $urlTxt")
+            logger.error(jse.getMessage())
+            promisedTimeTrial.tryFailure(jse)
           case t: Throwable =>
-            println(t.printStackTrace())
-            promisedTimeTrial.failure(t)
+            logger.error(t.getMessage)
+            logger.error(t.getStackTrace.mkString("Array(", ", ", ")"))
+            promisedTimeTrial.tryFailure(t)
         }
       })
 
     })
 
-    PendingTimeTrial(promisedTimeTrial, timeoutMilliseconds)
+    PendingTimeTrial(promisedTimeTrial, timeoutMS)
   }
 }

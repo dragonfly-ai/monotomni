@@ -1,9 +1,12 @@
 package ai.dragonfly.monotomni
 
+import java.util.{Timer, TimerTask}
 import java.util.concurrent.atomic.AtomicInteger
 
 import ai.dragonfly.monotomni.TimeTrial.Formats
+import slogging.{LogLevel, LoggerConfig, PrintLoggerFactory}
 
+import scala.concurrent.{Future, Promise}
 import scala.util.{Failure, Success}
 
 /**
@@ -12,15 +15,51 @@ import scala.util.{Failure, Success}
 
 object Demo extends App {
 
-    println(s"Running Demo Application\n${Mono+Omni}")
-    for (i <- 0 until 10) {
-        val moi:MOI = Mono+Omni()
-        println(s"$i => $moi {${M0I(moi)}}")
+    LoggerConfig.factory = PrintLoggerFactory()
+    LoggerConfig.level = LogLevel.DEBUG
+
+    // completion promises
+    val localPromise:Promise[Boolean] = Promise[Boolean]()
+    val r1Promise:Promise[Boolean] = Promise[Boolean]()
+    val r2Promise:Promise[Boolean] = Promise[Boolean]()
+
+    Future.traverse(
+        Seq[Promise[Boolean]](localPromise, r1Promise, r2Promise)
+    ) {
+        pb => (for { fb <- pb.future } yield {
+            fb
+        }).recover { case t:Throwable => true }
+    } onComplete {
+        println("SHUTTING DOWN ALL PROCESSES!")
+        native.exit(0)
     }
 
-    println("Testing Mono+Omni TimeTrial parsers:")
+    def repeat(f:Boolean => Boolean, countTo:Int):Unit = {
+        var count:Int = 0
+        scheduleRandomDelay(() => {
+            count = count + 1
+            f(count >= countTo)
+        })
+    }
+
+    println(s"Running Demo Application\n${Mono+Omni}\n\n")
+
     TimeTrial.test()
     TimeTrialJSONP.test()
+
+    println(s"Generating 10 randomly delayed MOI values ...")
+    repeat(
+        f = (stop:Boolean) => {
+            val moi = Mono+Omni()
+            println(s"Mono+Omni() => $moi ~ ${M0I(moi)}")
+            if (stop) {
+                localPromise.success(true)
+                println(s"... no longer Generating randomly delayed MOI values.")
+            }
+            stop
+        },
+        countTo = 10
+    )
 
     println("Testing TimeServer and TimeServerClient TimeTrials:")
     val uri1: java.net.URI = new java.net.URI("http://localhost:8080/time")
@@ -28,11 +67,22 @@ object Demo extends App {
 
     /* Default Connection */
     RemoteClock(native.connection.Default(uri1)) onComplete {
-        case Success(remoteClock:RemoteClock) =>
-            println(s"Approximate Monotonically Increasing Omni-Present Identifiers from:\n\t$remoteClock")
-            print(s"\t[${remoteClock.ami()}")
-            for (i <- 1 until 50) print(s", ${remoteClock.ami()}")
-            print("]")
+        case Success(rc:RemoteClock) =>
+            implicit val remoteClock:RemoteClock = rc
+            println(s"Generating 10 randomly delayed AMI values from $remoteClock ...")
+            repeat(
+                f = (stop:Boolean) => {
+                    val ami:AMI = remoteClock.ami()
+                    println(s"$remoteClock.ami() => $ami ~ ${AM1(ami)}")
+                    if (stop) {
+                        remoteClock.stop()
+                        println(s"... no longer Generating randomly delayed AMI values from $remoteClock.")
+                        r1Promise.success(true)
+                    }
+                    stop
+                },
+                countTo = 10
+            )
         case Failure(t:Throwable) => println(s"Couldn't connect to $uri1")
     }
 
@@ -41,11 +91,32 @@ object Demo extends App {
     /* alternatively */
     implicit val remoteClock:RemoteClock = new RemoteClock(native.connection.Default(uri2, Formats.JSON))
     remoteClock.ready(() => {
-        println(s"Approximate Monotonically Increasing Omni-Present Identifiers from:\n\t$remoteClock")
-        print(s"\t[${remoteClock.ami()}")
-        for (i <- 1 until 50) print(s", ${remoteClock.ami()}")
-        print("]")
+        println(s"Generating 10 randomly delayed AMI values from $remoteClock ...")
+        repeat(
+            f = (stop:Boolean) => {
+                val ami:AMI = remoteClock.ami()
+                println(s"$remoteClock.ami() => $ami ~ ${AM1(ami)}")
+                if (stop) {
+                    remoteClock.stop()
+                    println(s"... no longer Generating randomly delayed AMI values from $remoteClock.")
+                    r2Promise.success(true)
+                }
+                stop
+            },
+            countTo = 10
+        )
     })
+
+    def scheduleRandomDelay(f:() => Boolean):Unit = {
+        new Timer(s"Timer(moi = ${Mono+Omni()})").schedule(
+            new TimerTask() {
+                override def run():Unit = {
+                    if (!f()) scheduleRandomDelay(f)
+                }
+            },
+            (Math.random() * 3000).toLong
+        )
+    }
 }
 
 object Test {

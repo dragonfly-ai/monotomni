@@ -2,6 +2,8 @@ package ai.dragonfly.monotomni
 
 import java.io.{BufferedReader, InputStream, InputStreamReader}
 import java.nio.ByteBuffer
+import java.util.{Timer, TimerTask}
+import java.util.concurrent.TimeoutException
 
 import ai.dragonfly.distributed.Distributable
 
@@ -15,6 +17,7 @@ object TimeTrial extends native.TimeTrial {
   object Formats extends Enumeration {
     type Format = Value
     @JSExportAll val BINARY, STRING, JSON, XML, JSONP = Value
+    @JSExportAll val all:Seq[Format] = Seq[Format](BINARY, STRING, JSON, XML, JSONP)
   }
 
   /* Binary TimeTrial Utilities */
@@ -146,7 +149,15 @@ case class TimeTrial(serverTimeStamp:Long = System.currentTimeMillis()) {
 }
 
 @JSExportAll
-case class PendingTimeTrial(timeTrialPromise:Promise[TimeTrial], timeoutMilliseconds: Long, start:Long=System.currentTimeMillis(), moi:MOI = Mono+Omni()) extends Distributable
+case class PendingTimeTrial(promisedTimeTrial:Promise[TimeTrial], timeoutMilliseconds: Long, start:Long=System.currentTimeMillis(), moi:MOI = Mono+Omni()) extends Distributable {
+  // handle timeout:
+  new Timer(s"TimeoutMonitor( PendingTimeTrial( moi:$moi ) )").schedule(
+    new TimerTask() {
+      override def run():Unit = promisedTimeTrial.tryFailure( new TimeoutException() )
+    },
+    timeoutMilliseconds
+  )
+}
 
 object TimeTrialJSONP {
   def test():Unit = {
@@ -155,7 +166,7 @@ object TimeTrialJSONP {
     Fails(() => TimeTrialJSONP.JSONP("Blah Blah Blah. ERRROR!"))
   }
 
-  private val scJSONP = StringContext("function SYNCH_SERVERTIME(){ if ( typeof LOG_JSONP_TIME_TRIAL === 'undefined' ) { setTimeout(SYNCH_SERVERTIME, 500); } else { LOG_JSONP_TIME_TRIAL('", "','", "'); } } setTimeout(SYNCH_SERVERTIME, 1);")
+  private val scJSONP = StringContext("monotomni.connection.http.JSONP.logTimeTrial('", "','", "');")
   /**
    * Parses TimeTrial object from JSONP Response Body.
    * Browser environments don't need this method but JVM or Node.js clients can use it to support JSONP calls made from repurposed browser applications, for testing, or for validating server responses.

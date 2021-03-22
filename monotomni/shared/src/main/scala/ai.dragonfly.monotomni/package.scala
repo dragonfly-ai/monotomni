@@ -59,10 +59,18 @@ package object monotomni {
     def timestamp:Long = Mono+Omni.dawnOfTime + (moi >>> 32)
     def hashMask:Long = Mono+Omni.host
     def count:Long = (0x0000fff0L & moi) >>> 8
-    override def toString: String = s"Moi($timestamp, $count, $hashMask)"
+    override def toString: String = s"MOI($timestamp, $count, $hashMask)"
   }
 
   type AMI = Long
+
+  implicit class AM1(ami:AMI)(implicit remoteClock:RemoteClock) {
+    def dT:Long = remoteClock.now() - (Mono+Omni.now())
+    def timestamp:Long = Mono+Omni.dawnOfTime + (ami >>> 32) + dT
+    def hashMask:Long = 0x0000000F & ami
+    def count:Long = (0x0000fff0L & ami) >>> 8
+    override def toString: String = s"AMI($timestamp, $count, $hashMask)"
+  }
 
   val N2Int:Regex = "([0-9]{1,10})".r
   val N2Long:Regex = "([0-9]{1,19})".r

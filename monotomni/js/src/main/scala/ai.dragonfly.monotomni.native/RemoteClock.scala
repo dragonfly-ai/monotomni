@@ -9,7 +9,7 @@ import scala.language.implicitConversions
 trait RemoteClock extends Clock {
   def ready(callback: () => Unit):Unit
   def ami(moi:MOI = Mono+Omni()):AMI
-  @JSExport("ami") def amiJS(moiJS:js.BigInt):js.BigInt = if(js.isUndefined(moiJS)) ami() else ami(moiJS)
+  @JSExport("ami") def amiJS(moiJS:js.BigInt):js.BigInt = orDefault[js.BigInt](moiJS, ami())
   @JSExport("ready") def readyJS(callback: js.Function0[Unit]):Unit = ready(callback)
   @JSExport("now") def nowJS():js.BigInt = now()
 }

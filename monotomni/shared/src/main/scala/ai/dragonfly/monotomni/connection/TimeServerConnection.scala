@@ -2,20 +2,20 @@ package ai.dragonfly.monotomni.connection
 
 import ai.dragonfly.monotomni.PendingTimeTrial
 import ai.dragonfly.monotomni.TimeTrial.Formats.Format
+import slogging.LazyLogging
 
+import scala.collection.immutable.HashSet
 import scala.scalajs.js.annotation.JSExportAll
 
 @JSExportAll
-trait TimeServerConnection {
+trait TimeServerConnection extends LazyLogging {
   val path: String
-  val defaultFormat: Format
+  val format: Format
   val defaultTimeout: Int
 
-  def supportedFormats: Seq[Format]
+  def timeTrial(): PendingTimeTrial = timeTrial(defaultTimeout)
 
-  def timeTrial(): PendingTimeTrial = timeTrial(defaultFormat, defaultTimeout)
+  def timeTrial(timeoutMS: Int): PendingTimeTrial
 
-  def timeTrial(format: Format, timeoutMilliseconds: Int): PendingTimeTrial
-
-  override def toString: String = s"${this.getClass.getName}($path, $defaultFormat, $defaultTimeout)"
+  override def toString: String = s"${this.getClass.getSimpleName}($path, $format, $defaultTimeout)"
 }
