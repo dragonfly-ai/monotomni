@@ -56,17 +56,19 @@ implicit val r: RemoteClock = new RemoteClock(ai.dragonfly.monotomni.native.conn
 
 ```
 
-With the exception of JSONP, each client can operate with any of 4 messaging formats for TimeTrial events:
+With the exception of JSONP, each client can operate with any of the 5 TimeTrial messaging formats:
 ```scala
 TimeTrialFormat.BINARY
 TimeTrialFormat.STRING
 TimeTrialFormat.JSON
 TimeTrialFormat.XML
+TimeTrialFormat.JSONP
 ```
-By default, clients use BINARY, except JSONP which has its own specific format; all clients support http and https.
+All clients use BINARY by default, except JSONP which has its own specific format; all clients support http and https.
 ```
 https://whatever.time.server.com/time/BINARY -> Array(0, 0, 1, 120, 55, 107, -26, -66) // just 8 bytes.
-https://whatever.time.server.com/time/STRING -> 1615837521599
-https://whatever.time.server.com/time/JSON -> {"t":"1615837521600"}
-https://whatever.time.server.com/time/XML -> <TimeTrial t="1615837521600"/>
-```   
+https://whatever.time.server.com/time/STRING -> 1615141312110
+https://whatever.time.server.com/time/JSON -> {"t":"1615141312110"}
+https://whatever.time.server.com/time/XML -> <TimeTrial t="1615141312110"/>
+https://whatever.time.server.com/time/JSONP -> monotomni.connection.http.JSONP.logTimeTrial('6936979113930978754817','1615141312110');
+```

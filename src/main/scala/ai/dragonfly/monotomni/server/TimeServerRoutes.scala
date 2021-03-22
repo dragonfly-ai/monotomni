@@ -36,7 +36,8 @@ object TimeServerRoutes {
               case "BINARY" => complete( HttpEntity( ContentTypes.`application/octet-stream`, timeTrial.BINARY ) )
               case "STRING" => complete(timeTrial.STRING)
               case "JSON" => complete(timeTrial.JSON)
-              case _ => complete(timeTrial.XML) // Assume XML for any other string?
+              case "XML" => complete( HttpEntity( ContentTypes.`text/xml(UTF-8)`, timeTrial.XML ) )
+              case _ => complete(HttpEntity( ContentTypes.`text/plain(UTF-8)`, TimeTrial.Formats.helpString ) )
             }
         } ~ pathPrefix("demo" ) {
           getFromDirectory("./public_html/")

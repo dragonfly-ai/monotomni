@@ -30,8 +30,9 @@ object Demo extends App {
             fb
         }).recover { case t:Throwable => true }
     } onComplete {
-        println("SHUTTING DOWN ALL PROCESSES!")
-        native.exit(0)
+        case _ =>
+            println("SHUTTING DOWN ALL PROCESSES!")
+            native.exit(0)
     }
 
     def repeat(f:Boolean => Boolean, countTo:Int):Unit = {

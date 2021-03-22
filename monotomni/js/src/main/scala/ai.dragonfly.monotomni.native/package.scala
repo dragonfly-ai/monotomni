@@ -88,7 +88,7 @@ package object native {
     (url:URL, format:Formats.Format, timeout:Int) => tscf(
       url,
       orDefault[Formats.Format](format, tscf.defaultFormat),
-      orDefaultInt(timeout, tscf.defaultTimeout)
+      orDefaultNumber(timeout, tscf.defaultTimeout).toInt
     ),
     "defaultTimeout" -> tscf.defaultTimeout,
     "defaultFormat" -> tscf.defaultFormat.asInstanceOf[js.Any],
@@ -103,9 +103,15 @@ package object native {
    * @tparam T the type of the default value
    * @return the specified parameter or the default value.
    */
-  def orDefault[T <: js.Any](parameter:T, default:T):T = if(js.isUndefined(parameter)) default else parameter
+  def orDefault[T](parameter:T, default:T):T = if(js.isUndefined(parameter)) default else parameter
 
-  def orDefaultInt(parameter:Int, default:Int):Int = if(parameter == 0) default else parameter
+  /**
+   * Convenience Method for handling default values in native JavaScript factories and overloaded methods.
+   * @param parameter a numeric parameter that may have a value of 0 or undefined.
+   * @param default a default value to use if parameter is 0 or undefined.
+   * @return the specified parameter or the default value.
+   */
+  def orDefaultNumber(parameter:Double, default:Double):Double = if(parameter == 0) default else parameter
 
   /**
    * exit the program if running in Node.JS

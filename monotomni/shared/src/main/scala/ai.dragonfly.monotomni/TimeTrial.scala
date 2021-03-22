@@ -15,6 +15,23 @@ object TimeTrial extends native.TimeTrial {
 
   /** TimeTrialFormat enumeration as flags for content types supported by instances of TimeServerConnection. */
   object Formats extends Enumeration {
+    def helpString:String = {
+      val sb:StringBuilder = new StringBuilder("Time Server Documentation:\n")
+      sb.append(s"\thttp://some.time.server.com/time/BINARY -> ${TimeTrial().BINARY.mkString("Array(", ", ", ")")} // just ${TimeTrial.BYTES} bytes.\n")
+      sb.append(s"\thttps://some.time.server.com/time/BINARY -> ${TimeTrial().BINARY.mkString("Array(", ", ", ")")} // just ${TimeTrial.BYTES} bytes.\n")
+      sb.append(s"\thttp://some.time.server.com/time/STRING -> ${TimeTrial().STRING}\n")
+      sb.append(s"\thttps://some.time.server.com/time/STRING -> ${TimeTrial().STRING}\n")
+      sb.append(s"\thttp://some.time.server.com/time/JSON -> ${TimeTrial().JSON}\n")
+      sb.append(s"\thttps://some.time.server.com/time/JSON -> ${TimeTrial().JSON}\n")
+      sb.append(s"\thttp://some.time.server.com/time/XML -> ${TimeTrial().XML}\n")
+      sb.append(s"\thttps://some.time.server.com/time/XML -> ${TimeTrial().XML}\n")
+
+      sb.append("TimeTrialJSONP requests respond with this javascript:\n")
+      val moi:MOI = Mono+Omni()
+      sb.append(s"\thttp://some.time.server.com/time/JSONP/$moi -> ${TimeTrialJSONP(moi, TimeTrial()).JSONP}\n")
+      sb.append(s"\thttps://some.time.server.com/time/JSONP/$moi -> ${TimeTrialJSONP(moi, TimeTrial()).JSONP}\n")
+      sb.toString()
+    }
     type Format = Value
     @JSExportAll val BINARY, STRING, JSON, XML, JSONP = Value
     @JSExportAll val all:Seq[Format] = Seq[Format](BINARY, STRING, JSON, XML, JSONP)
@@ -109,14 +126,7 @@ object TimeTrial extends native.TimeTrial {
   def XML(rawXML:String):TimeTrial = parse(scXML, rawXML)
 
   def test():Unit = {
-    println("Examples of Time Trial Formats:")
-    println(s"\thttp://whatever.time.server.com/time/BINARY -> ${TimeTrial().BINARY.mkString("Array(", ", ", ")")} // just ${TimeTrial.BYTES} bytes.")
-    println(s"\thttp://whatever.time.server.com/time/STRING -> ${TimeTrial().STRING}")
-    println(s"\thttp://whatever.time.server.com/time/JSON -> ${TimeTrial().JSON}")
-    println(s"\thttp://whatever.time.server.com/time/XML -> ${TimeTrial().XML}")
-
-    println("TimeTrialJSONP requests respond with this javascript:")
-    println(s"\thttp://whatever.time.server.com/time/JSONP -> ${TimeTrialJSONP(Mono+Omni(), TimeTrial()).JSONP}")
+    println(TimeTrial.Formats.helpString)
 
     import Test._
     Passes( () => TimeTrial.BINARY(TimeTrial().BINARY) )
