@@ -16,6 +16,12 @@ In the browser, TimeTrials can rely on an AJAX TimeServerClient to connect to Ti
 
 Mono+Omni also ships with default HTTP/S clients for applications running in Node.js and JVM environments.
 
+To use this library with SBT:
+<pre>
+resolvers += "dragonfly.ai" at "https://code.dragonfly.ai/"
+libraryDependencies += "ai.dragonfly.code" %%% "monotomni" % "0.3"
+</pre><br />
+
 Examples:
 ```scala
 val id:MOI = Mono+Omni()  // Generate a Mono+Omni id for the local context.
@@ -70,5 +76,5 @@ https://whatever.time.server.com/time/BINARY -> Array(0, 0, 1, 120, 55, 107, -26
 https://whatever.time.server.com/time/STRING -> 1615141312110
 https://whatever.time.server.com/time/JSON -> {"t":"1615141312110"}
 https://whatever.time.server.com/time/XML -> <TimeTrial t="1615141312110"/>
-https://whatever.time.server.com/time/JSONP -> monotomni.connection.http.JSONP.logTimeTrial('6936979113930978754817','1615141312110');
+https://whatever.time.server.com/time/JSONP/6936979113930978754817 -> monotomni.connection.http.JSONP.logTimeTrial('6936979113930978754817','1615141312110');
 ```

@@ -2,7 +2,7 @@ ThisBuild / scalaVersion := "2.13.3"
 ThisBuild / publishTo := Some( Resolver.file("file",  new File( "/var/www/maven" ) ) )
 ThisBuild / scalacOptions ++= Seq("-feature", "-deprecation")
 ThisBuild / organization := "ai.dragonfly.code"
-ThisBuild / version := "0.02"
+ThisBuild / version := "0.03"
 ThisBuild / resolvers += "dragonfly.ai" at "https://code.dragonfly.ai/"
 ThisBuild / fork in run := true
 
