@@ -2,12 +2,11 @@ package ai.dragonfly.monotomni.native.connection.http
 
 import java.net.URI
 
-import ai.dragonfly.monotomni.TimeTrial.Formats
-import ai.dragonfly.monotomni.TimeTrial.Formats.Format
 import ai.dragonfly.monotomni
-import ai.dragonfly.monotomni.connection.TimeServerConnectionFactory
-import ai.dragonfly.monotomni.connection.http.TimeServerConnectionHTTP
-import ai.dragonfly.monotomni.native.connection.http.URL.{defaultFormat, defaultTimeout}
+import monotomni._
+import monotomni.TimeTrial.Formats
+import monotomni.connection.TimeServerConnectionFactory
+import monotomni.connection.http.TimeServerConnectionHTTP
 
 import scala.concurrent.{Future, Promise}
 
