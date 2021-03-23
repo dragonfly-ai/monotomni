@@ -28,8 +28,8 @@ object JSONP extends TimeServerConnectionFactory {
   private lazy val pendingTimeTrials: mutable.Map[MOI,PendingTimeTrial] = mutable.Map[MOI,PendingTimeTrial]()
   private def apply(pendingTimeTrial: PendingTimeTrial): PendingTimeTrial = {
     pendingTimeTrials.getOrElseUpdate(pendingTimeTrial.moi, pendingTimeTrial)
-    pendingTimeTrial.promisedTimeTrial.future onComplete {
-      case Failure(toe:TimeoutException) => timeout(pendingTimeTrial)
+    pendingTimeTrial.promisedTimeTrial.future.andThen {
+      case _ => timeout(pendingTimeTrial)
     }
     pendingTimeTrial
   }

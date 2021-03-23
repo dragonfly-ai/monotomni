@@ -5,8 +5,6 @@ import java.nio.ByteBuffer
 import java.util.{Timer, TimerTask}
 import java.util.concurrent.TimeoutException
 
-import ai.dragonfly.distributed.Distributable
-
 import scala.language.implicitConversions
 import scala.concurrent.Promise
 import scala.scalajs.js.annotation.JSExportAll
@@ -159,7 +157,7 @@ case class TimeTrial(serverTimeStamp:Long = System.currentTimeMillis()) {
 }
 
 @JSExportAll
-case class PendingTimeTrial(promisedTimeTrial:Promise[TimeTrial], timeoutMilliseconds: Long, start:Long=System.currentTimeMillis(), moi:MOI = Mono+Omni()) extends Distributable {
+case class PendingTimeTrial(promisedTimeTrial:Promise[TimeTrial], timeoutMilliseconds: Long, start:Long=System.currentTimeMillis(), moi:MOI = Mono+Omni()) {
   // handle timeout:
   new Timer(s"TimeoutMonitor( PendingTimeTrial( moi:$moi ) )").schedule(
     new TimerTask() {
