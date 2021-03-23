@@ -52,7 +52,7 @@ package object native {
   implicit def URL2URI(url:URL):java.net.URI = new java.net.URI(url.toString)
 
   /**
-   * Wraps internal Exception types in instances of [[scala.scalajs.js.JavaScriptException]].
+   * Wraps internal Exception types in instances of scala.scalajs.js.JavaScriptException.
    * @param f a factory method that returns an Exception from a single parameter of type:String.
    * @return
    */
@@ -82,7 +82,7 @@ package object native {
   }
 
   /**
-   * Convenience method for exporting [[TimeServerConnectionFactory]] objects to JavaScript.
+   * Convenience method for exporting [[monotomni.connection.TimeServerConnectionFactory]] objects to JavaScript.
    * @param tscf a [[TimeServerConnectionFactory]] for export to JavaScript
    * @return a native JavaScript instance of a [[TimeServerConnectionFactory]] object
    */
