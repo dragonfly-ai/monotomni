@@ -17,7 +17,7 @@ object URL extends TimeServerConnectionFactory {
 }
 
 /**
- *
+ * Native JVM implementation of a [[TimeServerConnectionHTTP]]
  * @param uri the http or https address of a TimeServer, e.g. https://timeserver.domain.com/time
  * @param format The format of the server response message.  Configurable for custom time servers.
  * @param defaultTimeout number of milliseconds until the request times out.

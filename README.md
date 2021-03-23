@@ -78,3 +78,12 @@ https://whatever.time.server.com/time/JSON -> {"t":"1615141312110"}
 https://whatever.time.server.com/time/XML -> <TimeTrial t="1615141312110"/>
 https://whatever.time.server.com/time/JSONP/6936979113930978754817 -> monotomni.connection.http.JSONP.logTimeTrial('6936979113930978754817','1615141312110');
 ```
+
+Notes about Scala and Scala.js:
+
+The 64 Bit Integer serves as the fundamental data type for Mono+Omni timestamps and MOI/AMI identifiers.
+   * Internally, both JVM and Scala.JS implementations rely on scala.Long which has no analogous type in JavaScript.
+   * For JavaScript developers who want to use Mono+Omni as a library, ai.dragonfly.monotomni.native.JavaScriptFacade provides variants of all public methods with parameters of type: scala.Long which instead take parameters of type: js.BigInt.
+   * JavaScript developers can write: monotomni.TimeTrial(1615141312110n) or monotomni.TimeTrial(BigInt("1615141312110"))
+   * Unfortunately, this disqualifies the Mono+Omni JavaScript library from running on Internet Explorer, which Microsoft no longer maintains, however it works well with all modern browsers and Node.JS.
+

@@ -1,15 +1,16 @@
 package ai.dragonfly.monotomni.native
 
-import ai.dragonfly.monotomni.native.connection.Default.logger
+import ai.dragonfly.monotomni
+
 import slogging.LazyLogging
 
 import scala.scalajs.js
 
+/**
+ * JavaScript environments can configure hostName by declaring var HOST_NAME = "Some String" in global scope before loading Mono+Omni
+ * This variable determines the least significant 8 bits of every [[monotomni.MOI]] and [[monotomni.AMI]] id generated from this host.
+ */
 object HostName extends LazyLogging {
-
-  /**
-   * JavaScript environments can configure hostName by declaring var HOST_NAME = "Some String" in global scope before loading Mono+Omni
-   */
 
   lazy val hostName: String = try {
     val hn = js.Dynamic.global.HOST_NAME.toString

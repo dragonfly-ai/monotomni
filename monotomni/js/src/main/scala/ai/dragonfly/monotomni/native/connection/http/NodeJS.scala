@@ -38,9 +38,9 @@ case class NodeJS(override val uri:URI, override val format:Formats.Format, over
   class HttpRequestOptions(timeout:Int) extends js.Object
 
   /**
-   * Execute a TimeTrial
-   * @param timeoutMS timeTrial timeout in milliseconds.
-   * @return PendingTimeTrial
+   * Executes a TimeTrial sequence to estimate ServerTime.
+   * @param timeoutMS optional timeout parameter to use instead of [[ai.dragonfly.monotomni.native.connection.http.AJAX.defaultTimeout]]
+   * @return an instance of [[ai.dragonfly.monotomni.PendingTimeTrial]]
    */
   override def timeTrial(timeoutMS:Int = defaultTimeout): PendingTimeTrial = {
     val urlTxt = s"$uri/$format/"

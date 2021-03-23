@@ -18,12 +18,7 @@ import scala.scalajs.js.typedarray.ArrayBuffer
 
 
 /**
- * The AJAX TimeServerConnection runs TimeTrials with the browser's native implementation of XMLHttpRequest.
- * Unless @uri points to a time server running on the same domain name, or one allowed by CORS, as the current web page,
- * AJAX will violate browser cross-origin security policies.
- * More about CORS: https://developer.mozilla.org/en-US/docs/Glossary/CORS
- * For in browser access to a cross-origin time server without CORS, see [[ai.dragonfly.monotomni.native.connection.http.JSONP]].
- * @return
+ * The AJAX TimeServerConnectionFactory runs only in Web Browsers.
  */
 
 object AJAX extends TimeServerConnectionFactory {
@@ -31,10 +26,25 @@ object AJAX extends TimeServerConnectionFactory {
   override val defaultFormat: Formats.Format = Formats.BINARY
 }
 
+/**
+ * The AJAX TimeServerConnection runs TimeTrials with the browser's native implementation of XMLHttpRequest.
+ * Unless @uri points to a time server running on the same domain name, or one allowed by CORS, as the current web page,
+ * AJAX will violate browser cross-origin security policies.  More about CORS: https://developer.mozilla.org/en-US/docs/Glossary/CORS
+ * For in browser access to a cross-origin time server without CORS, see [[ai.dragonfly.monotomni.native.connection.http.JSONP]].
+ *
+ * @param uri an HTTP or HTTPS TimeServer URL
+ * @param format the TimeTrial format to request from the TimeServer.
+ * @param defaultTimeout how long to wait, in milliseconds, for a TimeTrial response before giving up.
+ */
 case class AJAX(override val uri:URI, override val format:Formats.Format, override val defaultTimeout:Int) extends TimeServerConnectionHTTP {
 
   new XMLHttpRequest()  // throw exception if run outside of browser environment.
 
+  /**
+   * Executes a TimeTrial sequence to estimate ServerTime.
+   * @param timeoutMS optional timeout parameter to use instead of [[ai.dragonfly.monotomni.native.connection.http.AJAX.defaultTimeout]]
+   * @return an instance of [[ai.dragonfly.monotomni.PendingTimeTrial]]
+   */
   override def timeTrial(timeoutMS:Int = defaultTimeout): PendingTimeTrial = {
     val urlTxt = s"$uri/$format"
 

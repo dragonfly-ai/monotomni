@@ -15,6 +15,11 @@ package object monotomni {
   implicit val executionContext:ExecutionContext = native.executor
 
   trait Clock {
+    /**
+     * See [[monotomni.RemoteClock.now]] and Mono+[[Omni.now]]
+     *
+     * @return current TimeStamp as approximated by this Clock.
+     */
     def now():Long
   }
 

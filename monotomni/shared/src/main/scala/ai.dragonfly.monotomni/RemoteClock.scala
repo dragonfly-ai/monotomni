@@ -32,14 +32,27 @@ class RemoteClock(private val timeServerConnection: TimeServerConnection, maxWai
   val state:RemoteClockState = RemoteClockState(this)
   private var live:Boolean = true
 
+  /**
+   * Generate an AMI based on best current estimates of ServerTime.
+   * @param moi an optional MOI to convert into an AMI.
+   * @return an AMI approximating the TimeServer's MOI.
+   */
   override def ami(moi:MOI = Mono+Omni()):AMI = moi + (state.deltaT << 32)
 
+  /**
+   * Get the best current estimate of ServerTime right now.
+   * @return the best current estimate of a ServerTime timestamp right now.
+   */
   override def now():Long = System.currentTimeMillis() + state.deltaT
 
   private lazy val promisedDT: Promise[() => Long] = Promise[() => Long]()
 
   @JSExport def isReady:Boolean = promisedDT.isCompleted
 
+  /**
+   * Invoke callback parameter function as soon as a TimeServer estimate becomes available.
+   * @param callback callback function.
+   */
   override def ready(callback: () => Unit):Unit = {
     promisedDT.future onComplete {
       case Success(_) => callback()
@@ -47,6 +60,9 @@ class RemoteClock(private val timeServerConnection: TimeServerConnection, maxWai
     }
   }
 
+  /**
+   * Stops the TimeTrial scheduler if it is currently running.
+   */
   @JSExport def stop():Unit = {
     if (this.live) {
       logger.warn(s"Shutting down TimeTrial scheduler on $this")
@@ -57,6 +73,9 @@ class RemoteClock(private val timeServerConnection: TimeServerConnection, maxWai
 
   }
 
+  /**
+   * Starts the TimeTrial scheduler if it is not already running.
+   */
   @JSExport def start():Unit = {
     if (this.live) {
       logger.warn(s"Can't start TimeTrial scheduler $this because it is already running.")

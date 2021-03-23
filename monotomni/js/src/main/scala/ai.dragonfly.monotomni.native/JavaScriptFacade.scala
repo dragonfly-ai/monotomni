@@ -16,11 +16,23 @@ import scala.scalajs.js.annotation.JSExportTopLevel
  */
 object JavaScriptFacade {
 
+
+  /**
+   * Globally exported helper object for use with Omni
+   */
   @JSExportTopLevel("Mono") val mono:js.Dynamic = js.Dynamic.literal(
     "valueOf" -> (() => js.BigInt(0)),
     "toString" -> (() => "")
   )
 
+  /**
+   * Globally exported helper object for use with Mono.
+   * Together, these two objects support global syntax such as:
+   * var moi = Mono+Omni();
+   * console.log(Mono+Omni)
+   * var hashMask = Mono+Omni.host
+   * var dawnOfTime = Mono+Omni.dawnOfTime
+   */
   @JSExportTopLevel("Omni") val omni:js.Dynamic = factoryJS(
     () => Long2jsBigInt(Mono+Omni()),
     "dawnOfTime" -> Long2jsBigInt(Mono+Omni.dawnOfTime),
@@ -30,6 +42,9 @@ object JavaScriptFacade {
     "toString" -> (() => s"bject: ${Omni.toString()}")
   )
 
+  /**
+   * Main Package Scope.
+   */
   @JSExportTopLevel("monotomni")
   val scope:js.Dynamic = js.Dynamic.literal(
     "MOI" -> factoryJS(
@@ -65,8 +80,8 @@ object JavaScriptFacade {
         "JSONP" -> Formats.JSONP.asInstanceOf[js.Any]
       ),
       "Bytes" -> TimeTrial.BYTES,
-      "fromArrayBuffer" -> TimeTrial.fromArrayBuffer,
-      "fromUint8Array" -> TimeTrial.fromUint8Array,
+      "fromArrayBuffer" -> TimeTrial.fromArrayBuffer _,
+      "fromUint8Array" -> TimeTrial.fromUint8Array _,
       "BINARY" -> TimeTrial.BINARY _,
       "JSON" -> TimeTrial.JSON _,
       "STRING" -> TimeTrial.STRING _,
@@ -108,7 +123,7 @@ object JavaScriptFacade {
         },
         "NodeJS" -> timeServerConnection(NodeJS)
       ),
-      "Default" -> Default.apply _
+      "Default" -> Default.applyJS _
     )
   )
 }
